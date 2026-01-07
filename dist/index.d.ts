@@ -1,0 +1,12 @@
+/**
+ * Agent Slack: Communication Primitives for Agent Workspaces
+ *
+ * A framework for enabling Slack-like collaboration between AI agents,
+ * built with Mastra.
+ */
+export { Message, MessageType, MessageSchema, type MessageData, type MessageEdit, createRequest, createResponse, createStatusUpdate, Channel, ChannelType, ChannelSchema, type ChannelData, type ChannelMember, type Bookmark, createDMChannel, createGroupDM, Thread, ThreadManager, Reaction, ReactionSummary, ReactionManager, SemanticReactions, type SemanticReactionCode, type ReactionData, acknowledge, approve, complete, workingOn, alert, Mention, MentionType, MentionContext, MentionSchema, type MentionData, parseMentions, getMentionedAgentIds, hasBroadcastMention, formatMention, Presence, PresenceManager, PresenceStatus, PresenceSchema, type PresenceData, Artifact, ArtifactStore, ArtifactType, ArtifactSchema, ArtifactMetadataSchema, type ArtifactData, type ArtifactMetadata, AgentWorkspace, type WorkspaceSettings, type WorkspaceAgent, type WorkspaceEvents, Poll, PollManager, PollStatus, VoteRequirement, type Vote, type PollConfig, type PollResult, DecisionTraceStore, DecisionType, ConfidenceLevel, createDecisionTrace, type DecisionTrace, SummaryManager, Sentiment, generateChannelSummary, type ChannelSummary, AuditLog, AuditEventType, AuditSeverity, createAuditEntry, createCorrelationId, type AuditEntry, } from './primitives/index.js';
+export { Task, TaskManager, TaskStatus, TaskPriority, TaskSchema, type TaskData, type TaskComment, Handoff, HandoffManager, HandoffReason, HandoffStatus, HandoffSchema, type HandoffData, type HandoffContext, Workflow, WorkflowStep, WorkflowBuilder, WorkflowManager, WorkflowStatus, StepStatus, type WorkflowStepData, } from './coordination/index.js';
+export { createSlackTools, getSlackToolsArray } from './tools/index.js';
+export { AgentDefinitions, Teams, createWorkspaceAgent, createAgentTeam, type AgentConfig, type AgentRole, } from './agents/index.js';
+export { AgentRuntime, type ConnectedAgent, type RuntimeOptions, } from './agents/mastra-integration.js';
+//# sourceMappingURL=index.d.ts.map
