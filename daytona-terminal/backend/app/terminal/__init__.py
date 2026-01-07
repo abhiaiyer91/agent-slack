@@ -1,1 +1,0 @@
-"""Terminal management module."""

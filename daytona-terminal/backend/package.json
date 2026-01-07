@@ -1,0 +1,45 @@
+{
+  "name": "daytona-terminal-backend",
+  "version": "0.1.0",
+  "description": "Feature-rich terminal on Daytona.io with AI coding assistant support",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "lint": "eslint src --ext .ts",
+    "type-check": "tsc --noEmit",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.20.1",
+    "@fastify/cors": "^9.0.1",
+    "@fastify/websocket": "^10.0.1",
+    "dotenv": "^16.4.1",
+    "fastify": "^4.26.0",
+    "node-pty": "^1.0.0",
+    "openai": "^4.28.0",
+    "pino": "^8.18.0",
+    "pino-pretty": "^10.3.1",
+    "ssh2": "^1.15.0",
+    "uuid": "^9.0.1",
+    "ws": "^8.16.0",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.16",
+    "@types/ssh2": "^1.11.19",
+    "@types/uuid": "^9.0.8",
+    "@types/ws": "^8.5.10",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "eslint": "^8.56.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
