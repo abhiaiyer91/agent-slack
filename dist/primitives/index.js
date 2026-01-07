@@ -17,4 +17,12 @@ export { Presence, PresenceManager, PresenceStatus, PresenceSchema, } from './pr
 export { Artifact, ArtifactStore, ArtifactType, ArtifactSchema, ArtifactMetadataSchema, } from './artifact.js';
 // Workspace
 export { AgentWorkspace, } from './workspace.js';
+// Poll
+export { Poll, PollManager, PollStatus, VoteRequirement, } from './poll.js';
+// Decision Trace
+export { DecisionTraceStore, DecisionType, ConfidenceLevel, createDecisionTrace, } from './decision-trace.js';
+// Channel Summary
+export { SummaryManager, Sentiment, generateChannelSummary, } from './summary.js';
+// Audit Log
+export { AuditLog, AuditEventType, AuditSeverity, createAuditEntry, createCorrelationId, } from './audit-log.js';
 //# sourceMappingURL=index.js.map

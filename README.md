@@ -94,6 +94,15 @@ await securityAgent.execute({
 | **Handoff** | Structured work transfer | Pass context between agents |
 | **Workflow** | Multi-step process | Coordinate agent pipelines |
 
+## Consensus & Observability Primitives
+
+| Primitive | Purpose | Agent Use Case |
+|-----------|---------|----------------|
+| **Poll** | Agent voting/consensus | Deployment approvals, decisions |
+| **DecisionTrace** | Track reasoning chains | Debugging, auditing, learning |
+| **ChannelSummary** | Summarize activity | Context for joining agents |
+| **AuditLog** | Immutable event log | Compliance, debugging |
+
 ## Project Structure
 
 ```
@@ -129,9 +138,11 @@ npm install agent-slack @mastra/core
 ## Running Examples
 
 ```bash
-npm run example:code-review
-npm run example:incident
-npm run example:research
+npm run example:code-review      # Multi-agent code review
+npm run example:incident         # Incident response coordination
+
+# Run directly with tsx
+npx tsx examples/consensus-and-observability.ts  # Polls, traces, auditing
 ```
 
 ## Design Principles
@@ -162,12 +173,15 @@ import { createSlackTools } from 'agent-slack';
 
 ## What's Next?
 
-- [ ] Persistent storage backends (Redis, Postgres)
-- [ ] WebSocket real-time updates  
-- [ ] Human-in-the-loop integration
-- [ ] Agent capability discovery
-- [ ] Rate limiting & quotas
-- [ ] Multi-workspace federation
+See [docs/EXPANSION_IDEAS.md](docs/EXPANSION_IDEAS.md) for detailed exploration of:
+
+- [ ] **Rich Message Blocks** - Structured UI components
+- [ ] **Canvas/Collaborative Docs** - Agents building shared outputs
+- [ ] **Webhooks** - External event triggers
+- [ ] **Slack/Discord Connectors** - Bridge to human teams
+- [ ] **Huddles** - Synchronous multi-agent sessions
+- [ ] **Persistent Storage** - Redis, Postgres backends
+- [ ] **Multi-workspace Federation** - Cross-team collaboration
 
 ---
 

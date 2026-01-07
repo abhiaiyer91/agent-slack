@@ -69,10 +69,10 @@ export declare const HandoffSchema: z.ZodObject<{
     completionNotes: z.ZodDefault<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     id: string;
-    status: "pending" | "in_progress" | "completed" | "cancelled" | "accepted" | "rejected" | "expired";
+    status: "expired" | "cancelled" | "pending" | "in_progress" | "completed" | "accepted" | "rejected";
     createdAt: Date;
     fromAgent: string;
-    reason: "completed" | "error" | "capability_needed" | "better_suited" | "at_capacity" | "load_balancing" | "next_step" | "review_needed" | "approval_needed" | "stuck" | "escalation";
+    reason: "escalation" | "error" | "completed" | "capability_needed" | "better_suited" | "at_capacity" | "load_balancing" | "next_step" | "review_needed" | "approval_needed" | "stuck";
     isUrgent: boolean;
     rejectionReason: string;
     completionNotes: string;
@@ -86,10 +86,10 @@ export declare const HandoffSchema: z.ZodObject<{
     acceptedBy?: string | undefined;
 }, {
     id: string;
-    status: "pending" | "in_progress" | "completed" | "cancelled" | "accepted" | "rejected" | "expired";
+    status: "expired" | "cancelled" | "pending" | "in_progress" | "completed" | "accepted" | "rejected";
     createdAt: Date;
     fromAgent: string;
-    reason: "completed" | "error" | "capability_needed" | "better_suited" | "at_capacity" | "load_balancing" | "next_step" | "review_needed" | "approval_needed" | "stuck" | "escalation";
+    reason: "escalation" | "error" | "completed" | "capability_needed" | "better_suited" | "at_capacity" | "load_balancing" | "next_step" | "review_needed" | "approval_needed" | "stuck";
     channelId?: string | undefined;
     threadId?: string | undefined;
     expiresAt?: Date | undefined;

@@ -21,7 +21,15 @@ Presence, PresenceManager, PresenceStatus, PresenceSchema,
 // Artifact
 Artifact, ArtifactStore, ArtifactType, ArtifactSchema, ArtifactMetadataSchema, 
 // Workspace
-AgentWorkspace, } from './primitives/index.js';
+AgentWorkspace, 
+// Poll
+Poll, PollManager, PollStatus, VoteRequirement, 
+// Decision Trace
+DecisionTraceStore, DecisionType, ConfidenceLevel, createDecisionTrace, 
+// Channel Summary
+SummaryManager, Sentiment, generateChannelSummary, 
+// Audit Log
+AuditLog, AuditEventType, AuditSeverity, createAuditEntry, createCorrelationId, } from './primitives/index.js';
 // Coordination primitives
 export { 
 // Task

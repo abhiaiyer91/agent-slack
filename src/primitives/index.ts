@@ -87,3 +87,46 @@ export {
   type WorkspaceAgent,
   type WorkspaceEvents,
 } from './workspace.js';
+
+// Poll
+export {
+  Poll,
+  PollManager,
+  PollStatus,
+  VoteRequirement,
+  type Vote,
+  type PollConfig,
+  type PollResult,
+  type PollEvents,
+} from './poll.js';
+
+// Decision Trace
+export {
+  DecisionTraceStore,
+  DecisionType,
+  ConfidenceLevel,
+  createDecisionTrace,
+  type DecisionTrace,
+} from './decision-trace.js';
+
+// Channel Summary
+export {
+  SummaryManager,
+  Sentiment,
+  generateChannelSummary,
+  type ChannelSummary,
+  type ChannelDecision,
+  type OpenItem,
+  type SummaryConfig,
+} from './summary.js';
+
+// Audit Log
+export {
+  AuditLog,
+  AuditEventType,
+  AuditSeverity,
+  createAuditEntry,
+  createCorrelationId,
+  type AuditEntry,
+  type AuditQueryOptions,
+} from './audit-log.js';

@@ -76,6 +76,36 @@ export {
   type WorkspaceSettings,
   type WorkspaceAgent,
   type WorkspaceEvents,
+
+  // Poll
+  Poll,
+  PollManager,
+  PollStatus,
+  VoteRequirement,
+  type Vote,
+  type PollConfig,
+  type PollResult,
+
+  // Decision Trace
+  DecisionTraceStore,
+  DecisionType,
+  ConfidenceLevel,
+  createDecisionTrace,
+  type DecisionTrace,
+
+  // Channel Summary
+  SummaryManager,
+  Sentiment,
+  generateChannelSummary,
+  type ChannelSummary,
+
+  // Audit Log
+  AuditLog,
+  AuditEventType,
+  AuditSeverity,
+  createAuditEntry,
+  createCorrelationId,
+  type AuditEntry,
 } from './primitives/index.js';
 
 // Coordination primitives

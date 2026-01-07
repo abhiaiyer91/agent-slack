@@ -56,7 +56,7 @@ export declare const TaskSchema: z.ZodObject<{
     tags: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
 }, "strip", z.ZodTypeAny, {
     id: string;
-    status: "pending" | "assigned" | "in_progress" | "blocked" | "in_review" | "completed" | "cancelled" | "failed";
+    status: "cancelled" | "failed" | "pending" | "assigned" | "in_progress" | "blocked" | "in_review" | "completed";
     createdAt: Date;
     statusMessage: string;
     createdBy: string;
@@ -64,7 +64,7 @@ export declare const TaskSchema: z.ZodObject<{
     description: string;
     tags: string[];
     reviewers: string[];
-    priority: "critical" | "high" | "medium" | "low" | "background";
+    priority: "low" | "medium" | "high" | "critical" | "background";
     progressPercent: number;
     inputData: Record<string, unknown>;
     outputData: Record<string, unknown>;
@@ -79,11 +79,11 @@ export declare const TaskSchema: z.ZodObject<{
     dueAt?: Date | undefined;
 }, {
     id: string;
-    status: "pending" | "assigned" | "in_progress" | "blocked" | "in_review" | "completed" | "cancelled" | "failed";
+    status: "cancelled" | "failed" | "pending" | "assigned" | "in_progress" | "blocked" | "in_review" | "completed";
     createdAt: Date;
     createdBy: string;
     title: string;
-    priority: "critical" | "high" | "medium" | "low" | "background";
+    priority: "low" | "medium" | "high" | "critical" | "background";
     channelId?: string | undefined;
     threadId?: string | undefined;
     statusMessage?: string | undefined;
