@@ -135,14 +135,51 @@ examples/
 npm install agent-slack @mastra/core
 ```
 
+## 🎮 Interactive Playground
+
+Experience agents collaborating in real-time!
+
+### Live Demo
+
+Watch agents collaborate on a deployment decision:
+
+```bash
+npm run demo
+```
+
+This demo shows:
+- Agents reviewing code, security, and tests
+- Democratic voting on deployment approval
+- Decision tracing and audit logging
+- Structured deployment workflow
+
+### Interactive CLI
+
+Chat with agents directly:
+
+```bash
+npm run playground
+```
+
+**Commands:**
+- `/help` - Show available commands
+- `/agents` - List connected agents
+- `/channels` - List available channels
+- `/demo` - Run a demo scenario
+- `@agent-name` - Mention an agent in your message
+
 ## Running Examples
 
 ```bash
+# Demo scenarios (no API key required)
+npm run demo                     # Live collaboration demo
 npm run example:code-review      # Multi-agent code review
 npm run example:incident         # Incident response coordination
+npm run example:consensus        # Polls, traces, auditing
 
-# Run directly with tsx
-npx tsx examples/consensus-and-observability.ts  # Polls, traces, auditing
+# With real LLM (requires API key)
+export OPENAI_API_KEY=sk-...     # or ANTHROPIC_API_KEY
+npm run example:llm              # LLM-powered agents
 ```
 
 ## Design Principles

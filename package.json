@@ -12,7 +12,10 @@
     "test": "vitest",
     "example:code-review": "tsx examples/code-review.ts",
     "example:incident": "tsx examples/incident-response.ts",
-    "example:research": "tsx examples/research-collaboration.ts"
+    "example:consensus": "tsx examples/consensus-and-observability.ts",
+    "example:llm": "tsx examples/with-llm-agents.ts",
+    "playground": "tsx playground/cli.ts",
+    "demo": "tsx playground/live-demo.ts"
   },
   "keywords": [
     "ai",
@@ -24,19 +27,25 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@mastra/core": "^0.10.0",
-    "zod": "^3.24.0",
+    "@ai-sdk/anthropic": "^3.0.7",
+    "@ai-sdk/openai": "^3.0.7",
+    "@mastra/core": "^0.10.15",
+    "chalk": "^5.6.2",
+    "eventemitter3": "^5.0.1",
+    "inquirer": "^13.1.0",
     "nanoid": "^5.1.0",
-    "eventemitter3": "^5.0.1"
+    "ora": "^9.0.0",
+    "zod": "^3.24.0"
   },
   "devDependencies": {
+    "@types/inquirer": "^9.0.9",
     "@types/node": "^22.10.0",
-    "typescript": "^5.7.0",
-    "tsx": "^4.19.0",
-    "vitest": "^2.1.0",
-    "eslint": "^9.16.0",
     "@typescript-eslint/eslint-plugin": "^8.18.0",
-    "@typescript-eslint/parser": "^8.18.0"
+    "@typescript-eslint/parser": "^8.18.0",
+    "eslint": "^9.16.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0"
   },
   "engines": {
     "node": ">=20.0.0"

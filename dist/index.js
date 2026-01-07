@@ -40,4 +40,7 @@ Handoff, HandoffManager, HandoffReason, HandoffStatus, HandoffSchema,
 Workflow, WorkflowStep, WorkflowBuilder, WorkflowManager, WorkflowStatus, StepStatus, } from './coordination/index.js';
 // Mastra tools
 export { createSlackTools, getSlackToolsArray } from './tools/index.js';
+// Agent definitions and runtime
+export { AgentDefinitions, Teams, createWorkspaceAgent, createAgentTeam, } from './agents/index.js';
+export { AgentRuntime, } from './agents/mastra-integration.js';
 //# sourceMappingURL=index.js.map

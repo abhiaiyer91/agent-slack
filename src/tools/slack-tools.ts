@@ -12,7 +12,7 @@ import type { AgentWorkspace } from '../primitives/workspace.js';
 import { MessageType } from '../primitives/message.js';
 
 // Using unknown for flexibility with Mastra's complex tool types
-type SlackToolsMap = Record<string, unknown>;
+export type SlackToolsMap = Record<string, unknown>;
 
 /**
  * Create a set of Slack tools for an agent.

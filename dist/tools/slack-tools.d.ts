@@ -6,7 +6,7 @@
  * other agents, and coordinate work.
  */
 import type { AgentWorkspace } from '../primitives/workspace.js';
-type SlackToolsMap = Record<string, unknown>;
+export type SlackToolsMap = Record<string, unknown>;
 /**
  * Create a set of Slack tools for an agent.
  * @returns An object containing all Slack tools for the agent.
@@ -16,5 +16,4 @@ export declare function createSlackTools(workspace: AgentWorkspace, agentId: str
  * Get an array of all Slack tools for registering with Mastra.
  */
 export declare function getSlackToolsArray(workspace: AgentWorkspace, agentId: string): unknown[];
-export {};
 //# sourceMappingURL=slack-tools.d.ts.map

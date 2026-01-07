@@ -140,3 +140,19 @@ export {
 
 // Mastra tools
 export { createSlackTools, getSlackToolsArray } from './tools/index.js';
+
+// Agent definitions and runtime
+export {
+  AgentDefinitions,
+  Teams,
+  createWorkspaceAgent,
+  createAgentTeam,
+  type AgentConfig,
+  type AgentRole,
+} from './agents/index.js';
+
+export {
+  AgentRuntime,
+  type ConnectedAgent,
+  type RuntimeOptions,
+} from './agents/mastra-integration.js';
