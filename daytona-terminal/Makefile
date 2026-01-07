@@ -1,66 +1,69 @@
 # Daytona Terminal Makefile
-# Provides convenient commands for development and deployment
+# The best AI terminal ever
 
 .PHONY: help install dev build test lint clean docker-build docker-up docker-down
 
 # Default target
 help:
-	@echo "Daytona Terminal - Development Commands"
 	@echo ""
-	@echo "Usage: make [target]"
+	@echo "  🚀 Daytona Terminal - The Best AI Terminal"
 	@echo ""
-	@echo "Development:"
-	@echo "  install      Install all dependencies"
-	@echo "  dev          Start development servers"
-	@echo "  backend      Start backend only"
-	@echo "  frontend     Start frontend only"
+	@echo "  Usage: make [target]"
 	@echo ""
-	@echo "Testing:"
-	@echo "  test         Run all tests"
-	@echo "  test-backend Run backend tests"
-	@echo "  lint         Run linters"
+	@echo "  Development:"
+	@echo "    install      Install all dependencies"
+	@echo "    dev          Start development servers"
+	@echo "    backend      Start backend only"
+	@echo "    frontend     Start frontend only"
 	@echo ""
-	@echo "Docker:"
-	@echo "  docker-build Build Docker images"
-	@echo "  docker-up    Start with Docker Compose"
-	@echo "  docker-down  Stop Docker containers"
+	@echo "  Testing & Quality:"
+	@echo "    test         Run all tests"
+	@echo "    lint         Run linters"
+	@echo "    type-check   Run TypeScript type checking"
 	@echo ""
-	@echo "Utilities:"
-	@echo "  clean        Clean build artifacts"
-	@echo "  docs         Generate documentation"
+	@echo "  Docker:"
+	@echo "    docker-build Build Docker images"
+	@echo "    docker-up    Start with Docker Compose"
+	@echo "    docker-down  Stop Docker containers"
+	@echo ""
+	@echo "  CLI:"
+	@echo "    cli-install  Install CLI globally"
+	@echo ""
 
 # Install dependencies
 install:
-	@echo "Installing backend dependencies..."
-	cd backend && pip install -r requirements.txt
-	@echo "Installing frontend dependencies..."
+	@echo "📦 Installing backend dependencies..."
+	cd backend && npm install
+	@echo "📦 Installing frontend dependencies..."
 	cd frontend && npm install
-	@echo "Installing CLI..."
-	cd cli && pip install -e .
-	@echo "Done!"
+	@echo "📦 Installing CLI dependencies..."
+	cd cli && npm install
+	@echo "✅ Done!"
 
 # Development servers
 dev:
-	@echo "Starting development servers..."
-	@echo "Backend: http://localhost:8000"
-	@echo "Frontend: http://localhost:3000"
+	@echo "🚀 Starting development servers..."
+	@echo "   Backend:  http://localhost:8000"
+	@echo "   Frontend: http://localhost:3000"
 	@make -j2 backend frontend
 
 backend:
-	cd backend && uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+	cd backend && npm run dev
 
 frontend:
 	cd frontend && npm run dev
 
-# Testing
-test: test-backend
-
-test-backend:
-	cd backend && pytest -v
+# Testing & Quality
+test:
+	cd backend && npm test
 
 lint:
-	cd backend && ruff check . && black --check .
+	cd backend && npm run lint
 	cd frontend && npm run lint
+
+type-check:
+	cd backend && npm run type-check
+	cd frontend && npm run type-check
 
 # Docker
 docker-build:
@@ -68,9 +71,11 @@ docker-build:
 
 docker-up:
 	docker-compose up -d
-	@echo "Services started!"
-	@echo "Frontend: http://localhost:3000"
-	@echo "Backend: http://localhost:8000"
+	@echo ""
+	@echo "🚀 Daytona Terminal is running!"
+	@echo "   Frontend: http://localhost:3000"
+	@echo "   Backend:  http://localhost:8000"
+	@echo ""
 
 docker-down:
 	docker-compose down
@@ -78,16 +83,14 @@ docker-down:
 docker-logs:
 	docker-compose logs -f
 
+# CLI
+cli-install:
+	cd cli && npm install && npm link
+	@echo "✅ CLI installed! Run 'dt --help' to get started."
+
 # Clean
 clean:
-	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
-	find . -type d -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null || true
-	find . -type d -name "node_modules" -exec rm -rf {} + 2>/dev/null || true
-	find . -type d -name "dist" -exec rm -rf {} + 2>/dev/null || true
-	find . -type d -name "*.egg-info" -exec rm -rf {} + 2>/dev/null || true
-	find . -type f -name "*.pyc" -delete 2>/dev/null || true
-
-# Documentation
-docs:
-	@echo "Documentation is in the docs/ directory"
-	@echo "Main README: README.md"
+	rm -rf backend/node_modules backend/dist
+	rm -rf frontend/node_modules frontend/dist
+	rm -rf cli/node_modules cli/dist
+	@echo "✅ Cleaned!"

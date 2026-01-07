@@ -1,35 +1,137 @@
-# Daytona Terminal
+# 🚀 Daytona Terminal
 
-A feature-rich terminal application built on [Daytona.io](https://daytona.io) infrastructure with integrated AI coding assistant support (Claude Code & OpenAI).
+**The best AI terminal ever.** Better than Warp. Built on [Daytona.io](https://daytona.io).
 
-![Daytona Terminal](docs/screenshot.png)
+<p align="center">
+  <img src="docs/screenshot.png" alt="Daytona Terminal" width="800">
+</p>
 
-## Features
+## ✨ Features
 
-- 🖥️ **Modern Web Terminal** - Full-featured terminal with xterm.js
-- 🤖 **AI Coding Assistants** - Integrated Claude Code and OpenAI support
-- 🚀 **Daytona Integration** - Leverage Daytona.io for cloud development environments
-- 📡 **Real-time WebSocket** - Low-latency terminal I/O
-- 🔍 **Terminal Search** - Ctrl+F to search terminal history
-- 📋 **Workspace Management** - Create, start, stop, and delete workspaces
-- 💻 **CLI Tool** - Command-line interface for power users
-- 🎨 **Beautiful UI** - Modern, dark-themed interface
+### 🧠 AI-First Design
+- **Auto Error Detection** - Instantly detects errors and suggests fixes
+- **Predictive Commands** - AI suggests your next command before you type
+- **Context-Aware Assistance** - Understands your terminal output, project, and history
 
-## Architecture
+### 📦 Command Blocks
+- **Visual Command History** - Every command is a collapsible block
+- **Error Analysis** - Automatic error categorization and explanations
+- **One-Click Re-run** - Run previous commands instantly
+
+### ⚡ Modern Terminal
+- **Beautiful UI** - Tokyo Night theme, smooth animations
+- **WebGL Rendering** - Blazing fast terminal output
+- **Full xterm.js** - All the terminal features you expect
+
+### 🔧 Developer Experience
+- **TypeScript Everything** - Backend, frontend, and CLI all in TypeScript
+- **Daytona Integration** - Cloud dev environments out of the box
+- **Multi-Model AI** - Claude & OpenAI support
+
+## 🏃 Quick Start
+
+```bash
+# Clone
+git clone https://github.com/your-org/daytona-terminal.git
+cd daytona-terminal
+
+# Install everything
+make install
+
+# Start development
+make dev
+```
+
+Open http://localhost:3000 🎉
+
+## 📦 Installation
+
+### Development Setup
+
+```bash
+# Backend
+cd backend
+npm install
+cp .env.example .env
+# Add your API keys to .env
+npm run dev
+
+# Frontend (new terminal)
+cd frontend
+npm install
+npm run dev
+
+# CLI
+cd cli
+npm install
+npm link
+```
+
+### Docker
+
+```bash
+# Create .env with your API keys
+cp backend/.env.example .env
+
+# Start everything
+docker-compose up -d
+```
+
+## ⚙️ Configuration
+
+Create `backend/.env`:
+
+```env
+# Daytona (optional - works in local mode without)
+DAYTONA_API_KEY=your-daytona-key
+
+# AI (at least one required for AI features)
+ANTHROPIC_API_KEY=sk-ant-...
+OPENAI_API_KEY=sk-...
+
+# Features
+ENABLE_PREDICTIVE_COMMANDS=true
+ENABLE_AUTO_FIX=true
+ENABLE_COMMAND_ANALYSIS=true
+```
+
+## 🖥️ CLI Usage
+
+```bash
+# List workspaces
+dt list
+
+# Create workspace with AI
+dt create my-project --repo https://github.com/user/repo --ai claude
+
+# Connect to terminal
+dt connect <workspace-id>
+
+# Interactive AI session
+dt ai <workspace-id>
+
+# Execute command
+dt exec <workspace-id> "npm install"
+
+# Show info
+dt info
+```
+
+## 🏗️ Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                      Daytona Terminal                           │
 ├─────────────────────────────────────────────────────────────────┤
 │  ┌─────────────┐   ┌─────────────┐   ┌─────────────────────────┐│
-│  │  React UI   │   │   CLI Tool  │   │     REST API Clients    ││
-│  │  (xterm.js) │   │   (Typer)   │   │                         ││
+│  │  React UI   │   │   CLI       │   │     API Clients         ││
+│  │  (xterm.js) │   │  (TypeScript│   │                         ││
 │  └──────┬──────┘   └──────┬──────┘   └───────────┬─────────────┘│
 │         │                 │                       │              │
 │         └─────────────────┼───────────────────────┘              │
 │                           │                                      │
 │                    ┌──────▼──────┐                               │
-│                    │   FastAPI   │                               │
+│                    │   Fastify   │                               │
 │                    │   Backend   │                               │
 │                    └──────┬──────┘                               │
 │                           │                                      │
@@ -43,274 +145,67 @@ A feature-rich terminal application built on [Daytona.io](https://daytona.io) in
 └─────────┼─────────────────┼─────────────────┼────────────────────┘
           │                 │                 │
    ┌──────▼──────┐   ┌──────▼──────┐   ┌──────▼──────┐
-   │  Daytona.io │   │  PTY/SSH    │   │  Claude/    │
-   │     API     │   │  Sessions   │   │  OpenAI API │
+   │  Daytona.io │   │  node-pty   │   │  Claude/    │
+   │     API     │   │  Sessions   │   │  OpenAI     │
    └─────────────┘   └─────────────┘   └─────────────┘
 ```
 
-## Quick Start
+## 🎨 Tech Stack
 
-### Prerequisites
+| Layer | Technology |
+|-------|------------|
+| **Frontend** | React 18, TypeScript, Tailwind CSS, xterm.js, Zustand |
+| **Backend** | Fastify, TypeScript, node-pty, WebSocket |
+| **AI** | Anthropic Claude, OpenAI GPT-4 |
+| **Infrastructure** | Daytona.io, Docker |
 
-- Python 3.10+
-- Node.js 18+
-- Docker (optional)
-- Daytona API key (optional, for cloud workspaces)
+## 📡 API Reference
 
-### Installation
+### WebSocket Protocol
 
-1. **Clone the repository:**
+Connect to `/ws/terminal/{sessionId}`:
 
-```bash
-git clone https://github.com/your-org/daytona-terminal.git
-cd daytona-terminal
+```typescript
+// Send input
+{ type: 'input', data: 'ls -la\n' }
+
+// Resize terminal
+{ type: 'resize', cols: 120, rows: 40 }
+
+// Receive output
+{ type: 'output', data: '...' }
+
+// Receive AI suggestion (auto-triggered on error)
+{ type: 'suggestion', suggestion: { text: '...', commands: ['...'] } }
+
+// Receive command block
+{ type: 'block', block: { id, command, output, analysis } }
 ```
 
-2. **Set up the backend:**
+### REST Endpoints
 
-```bash
-cd backend
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
-cp .env.example .env
-# Edit .env with your configuration
-```
+| Endpoint | Description |
+|----------|-------------|
+| `GET /api/v1/workspaces` | List workspaces |
+| `POST /api/v1/workspaces` | Create workspace |
+| `POST /api/v1/sessions` | Create terminal session |
+| `POST /api/v1/ai/conversations` | Start AI conversation |
+| `POST /api/v1/ai/conversations/:id/message` | Send message to AI |
 
-3. **Set up the frontend:**
+## 🤝 Contributing
 
-```bash
-cd frontend
-npm install
-```
+1. Fork it
+2. Create your feature branch (`git checkout -b feature/amazing`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing`)
+5. Open a Pull Request
 
-4. **Start the development servers:**
+## 📄 License
 
-```bash
-# Terminal 1: Backend
-cd backend
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+MIT License - see [LICENSE](LICENSE)
 
-# Terminal 2: Frontend
-cd frontend
-npm run dev
-```
+---
 
-5. **Open in browser:**
-
-Navigate to `http://localhost:3000`
-
-### Using Docker
-
-```bash
-docker-compose up -d
-```
-
-## Configuration
-
-### Environment Variables
-
-Create a `.env` file in the backend directory:
-
-```env
-# Daytona Configuration
-DAYTONA_API_URL=https://api.daytona.io
-DAYTONA_API_KEY=your-daytona-api-key
-
-# AI Integration
-ANTHROPIC_API_KEY=your-anthropic-api-key
-OPENAI_API_KEY=your-openai-api-key
-
-# Security
-SECRET_KEY=your-secret-key
-
-# Optional
-DEBUG=true
-```
-
-### Running Without Daytona
-
-The terminal can run in "local mode" without a Daytona API key. In this mode, it creates local PTY sessions instead of cloud workspaces.
-
-## CLI Usage
-
-Install the CLI:
-
-```bash
-cd cli
-pip install -e .
-```
-
-### Commands
-
-```bash
-# List workspaces
-dt list
-
-# Create a workspace
-dt create my-project --repo https://github.com/user/repo --ai claude
-
-# Connect to a workspace terminal
-dt connect <workspace-id>
-
-# Start an AI assistant session
-dt ai <workspace-id>
-
-# Execute a command
-dt exec <workspace-id> "ls -la"
-
-# View info
-dt info
-```
-
-## API Reference
-
-### Workspaces
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/v1/workspaces` | List workspaces |
-| POST | `/api/v1/workspaces` | Create workspace |
-| GET | `/api/v1/workspaces/{id}` | Get workspace |
-| PATCH | `/api/v1/workspaces/{id}` | Update workspace |
-| DELETE | `/api/v1/workspaces/{id}` | Delete workspace |
-| POST | `/api/v1/workspaces/{id}/start` | Start workspace |
-| POST | `/api/v1/workspaces/{id}/stop` | Stop workspace |
-| POST | `/api/v1/workspaces/{id}/exec` | Execute command |
-
-### Sessions
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/v1/sessions` | List sessions |
-| POST | `/api/v1/sessions` | Create session |
-| GET | `/api/v1/sessions/{id}` | Get session |
-| DELETE | `/api/v1/sessions/{id}` | Close session |
-| POST | `/api/v1/sessions/{id}/resize` | Resize terminal |
-
-### AI
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/v1/ai/assistants` | List AI assistants |
-| POST | `/api/v1/ai/conversations` | Create conversation |
-| POST | `/api/v1/ai/conversations/{id}/message` | Send message |
-
-### WebSocket
-
-Connect to `/ws/terminal/{session_id}` for real-time terminal I/O.
-
-**Message Format:**
-
-```json
-// Input
-{"type": "input", "data": "ls -la\n"}
-
-// Resize
-{"type": "resize", "cols": 120, "rows": 40}
-
-// Output (from server)
-{"type": "output", "data": "..."}
-```
-
-## AI Assistant Integration
-
-### Claude Code
-
-The integrated Claude assistant can:
-- Analyze your code and terminal output
-- Suggest commands to run
-- Help debug errors
-- Write and modify code
-
-### OpenAI
-
-OpenAI integration provides similar capabilities using GPT-4.
-
-### Usage
-
-1. Create a workspace with AI enabled:
-   ```bash
-   dt create my-project --ai claude
-   ```
-
-2. Use the AI panel in the web UI, or start a CLI session:
-   ```bash
-   dt ai <workspace-id>
-   ```
-
-3. Ask questions about your code:
-   ```
-   You: How do I fix this error?
-   AI: Looking at the terminal output, the error is...
-   ```
-
-## Development
-
-### Project Structure
-
-```
-daytona-terminal/
-├── backend/
-│   ├── app/
-│   │   ├── api/           # API routes
-│   │   ├── core/          # Configuration, logging
-│   │   ├── models/        # Pydantic models
-│   │   ├── services/      # Business logic
-│   │   └── main.py        # FastAPI app
-│   ├── requirements.txt
-│   └── .env.example
-├── frontend/
-│   ├── src/
-│   │   ├── components/    # React components
-│   │   ├── hooks/         # Custom hooks
-│   │   ├── stores/        # Zustand stores
-│   │   ├── api/           # API client
-│   │   └── App.tsx
-│   └── package.json
-├── cli/
-│   └── daytona_terminal_cli.py
-├── docs/
-└── docker-compose.yml
-```
-
-### Running Tests
-
-```bash
-# Backend tests
-cd backend
-pytest
-
-# Frontend tests
-cd frontend
-npm test
-```
-
-### Building for Production
-
-```bash
-# Frontend build
-cd frontend
-npm run build
-
-# The built files will be in frontend/dist/
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
-
-## License
-
-MIT License - see [LICENSE](LICENSE) for details.
-
-## Acknowledgments
-
-- [Daytona.io](https://daytona.io) - Cloud development environments
-- [xterm.js](https://xtermjs.org/) - Terminal emulator
-- [FastAPI](https://fastapi.tiangolo.com/) - Backend framework
-- [Anthropic](https://anthropic.com) - Claude AI
-- [OpenAI](https://openai.com) - GPT API
+<p align="center">
+  Built with 💜 on <a href="https://daytona.io">Daytona.io</a>
+</p>

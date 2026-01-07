@@ -13,32 +13,32 @@ export interface Workspace {
   id: string;
   name: string;
   status: WorkspaceStatus;
-  repository_url?: string;
+  repositoryUrl?: string;
   branch?: string;
   image: string;
-  ssh_host?: string;
-  ssh_port?: number;
-  ssh_user?: string;
-  ide_url?: string;
-  cpu_cores?: number;
-  memory_gb?: number;
-  disk_gb?: number;
-  created_at: string;
-  updated_at: string;
-  last_accessed_at?: string;
-  ai_assistant?: string;
-  ai_assistant_installed: boolean;
+  sshHost?: string;
+  sshPort?: number;
+  sshUser?: string;
+  ideUrl?: string;
+  cpuCores?: number;
+  memoryGb?: number;
+  diskGb?: number;
+  createdAt: string;
+  updatedAt: string;
+  lastAccessedAt?: string;
+  aiAssistant?: string;
+  aiAssistantInstalled: boolean;
   metadata: Record<string, unknown>;
 }
 
 export interface WorkspaceCreate {
   name: string;
-  repository_url?: string;
+  repositoryUrl?: string;
   branch?: string;
   image?: string;
-  env_vars?: Record<string, string>;
-  dotfiles_url?: string;
-  ai_assistant?: string;
+  envVars?: Record<string, string>;
+  dotfilesUrl?: string;
+  aiAssistant?: string;
 }
 
 // Session types
@@ -46,26 +46,42 @@ export type SessionStatus = 'connecting' | 'connected' | 'disconnected' | 'error
 
 export interface TerminalSession {
   id: string;
-  workspace_id: string;
+  workspaceId: string;
   status: SessionStatus;
   shell: string;
   cols: number;
   rows: number;
-  working_directory?: string;
-  websocket_url?: string;
-  created_at: string;
-  last_activity_at: string;
-  ai_context_enabled: boolean;
-  ai_conversation_id?: string;
+  workingDirectory?: string;
+  websocketUrl?: string;
+  createdAt: string;
+  lastActivityAt: string;
+  aiContextEnabled: boolean;
+  aiConversationId?: string;
 }
 
 export interface TerminalSessionCreate {
-  workspace_id: string;
+  workspaceId: string;
   shell?: string;
   cols?: number;
   rows?: number;
-  working_directory?: string;
-  env_vars?: Record<string, string>;
+  workingDirectory?: string;
+  envVars?: Record<string, string>;
+}
+
+// Command Block types
+export interface CommandBlock {
+  id: string;
+  command: string;
+  output: string;
+  exitCode: number | null;
+  startTime: string;
+  endTime: string | null;
+  cwd: string;
+  analysis?: {
+    hasError: boolean;
+    errorType?: string;
+    suggestion?: string;
+  };
 }
 
 // AI types
@@ -77,8 +93,8 @@ export interface AIAssistant {
   description: string;
   model: string;
   installed: boolean;
-  installation_command?: string;
-  api_key_env_var: string;
+  installationCommand?: string;
+  apiKeyEnvVar: string;
 }
 
 export interface AIMessage {
@@ -86,37 +102,55 @@ export interface AIMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
   timestamp: string;
-  terminal_context?: string;
+  terminalContext?: string;
 }
 
 export interface AIConversation {
   id: string;
-  session_id: string;
-  assistant_type: AIAssistantType;
+  sessionId: string;
+  assistantType: AIAssistantType;
   messages: AIMessage[];
   model: string;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface AICommandRequest {
   prompt: string;
-  include_terminal_context?: boolean;
-  include_file_context?: boolean;
+  includeTerminalContext?: boolean;
+  includeFileContext?: boolean;
   files?: string[];
-  auto_execute?: boolean;
+  autoExecute?: boolean;
 }
 
 export interface AICommandResponse {
   message: string;
-  suggested_commands: string[];
-  code_blocks: Array<{ language: string; content: string }>;
-  requires_confirmation: boolean;
-  conversation_id: string;
+  suggestedCommands: string[];
+  codeBlocks: Array<{ language: string; content: string }>;
+  requiresConfirmation: boolean;
+  conversationId: string;
+}
+
+export interface AISuggestion {
+  text: string;
+  commands: string[];
 }
 
 // WebSocket message types
-export type WSMessageType = 'input' | 'output' | 'resize' | 'ping' | 'pong' | 'connected' | 'disconnected' | 'error';
+export type WSMessageType = 
+  | 'input' 
+  | 'output' 
+  | 'resize' 
+  | 'ping' 
+  | 'pong' 
+  | 'connected' 
+  | 'disconnected' 
+  | 'error' 
+  | 'block' 
+  | 'suggestion'
+  | 'completions'
+  | 'analyze'
+  | 'complete';
 
 export interface WSMessage {
   type: WSMessageType;
@@ -124,5 +158,8 @@ export interface WSMessage {
   cols?: number;
   rows?: number;
   message?: string;
-  session_id?: string;
+  sessionId?: string;
+  block?: CommandBlock;
+  suggestion?: AISuggestion;
+  completions?: string[];
 }

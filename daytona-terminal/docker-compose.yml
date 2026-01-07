@@ -8,14 +8,16 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DEBUG=false
+      - NODE_ENV=production
+      - PORT=8000
       - DAYTONA_API_URL=${DAYTONA_API_URL:-https://api.daytona.io}
       - DAYTONA_API_KEY=${DAYTONA_API_KEY:-}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
-      - SECRET_KEY=${SECRET_KEY:-change-me-in-production}
+      - ENABLE_PREDICTIVE_COMMANDS=true
+      - ENABLE_AUTO_FIX=true
+      - ENABLE_COMMAND_ANALYSIS=true
     volumes:
-      - ./backend:/app
       - terminal-data:/app/data
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]

@@ -7,8 +7,7 @@ interface WorkspaceState {
   selectedWorkspace: Workspace | null;
   loading: boolean;
   error: string | null;
-  
-  // Actions
+
   fetchWorkspaces: () => Promise<void>;
   fetchWorkspace: (id: string) => Promise<Workspace | null>;
   createWorkspace: (data: WorkspaceCreate) => Promise<Workspace>;
@@ -19,7 +18,7 @@ interface WorkspaceState {
   clearError: () => void;
 }
 
-export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
+export const useWorkspaceStore = create<WorkspaceState>((set) => ({
   workspaces: [],
   selectedWorkspace: null,
   loading: false,
@@ -84,13 +83,9 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     try {
       const workspace = await workspacesApi.start(id);
       set((state) => ({
-        workspaces: state.workspaces.map((w) =>
-          w.id === id ? workspace : w
-        ),
+        workspaces: state.workspaces.map((w) => (w.id === id ? workspace : w)),
         selectedWorkspace:
-          state.selectedWorkspace?.id === id
-            ? workspace
-            : state.selectedWorkspace,
+          state.selectedWorkspace?.id === id ? workspace : state.selectedWorkspace,
         loading: false,
       }));
     } catch (err) {
@@ -104,13 +99,9 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     try {
       const workspace = await workspacesApi.stop(id);
       set((state) => ({
-        workspaces: state.workspaces.map((w) =>
-          w.id === id ? workspace : w
-        ),
+        workspaces: state.workspaces.map((w) => (w.id === id ? workspace : w)),
         selectedWorkspace:
-          state.selectedWorkspace?.id === id
-            ? workspace
-            : state.selectedWorkspace,
+          state.selectedWorkspace?.id === id ? workspace : state.selectedWorkspace,
         loading: false,
       }));
     } catch (err) {

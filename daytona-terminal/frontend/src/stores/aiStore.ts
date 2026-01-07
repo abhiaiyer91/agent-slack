@@ -15,7 +15,6 @@ interface AIState {
   loading: boolean;
   error: string | null;
 
-  // Actions
   fetchAssistants: () => Promise<void>;
   createConversation: (
     sessionId: string,
@@ -51,10 +50,7 @@ export const useAIStore = create<AIState>((set, get) => ({
   ) => {
     set({ loading: true, error: null });
     try {
-      const conversation = await aiApi.createConversation(
-        sessionId,
-        assistantType
-      );
+      const conversation = await aiApi.createConversation(sessionId, assistantType);
       set({ currentConversation: conversation, responses: [], loading: false });
       return conversation;
     } catch (err) {

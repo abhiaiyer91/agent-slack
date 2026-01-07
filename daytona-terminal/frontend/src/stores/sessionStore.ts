@@ -8,7 +8,6 @@ interface SessionState {
   loading: boolean;
   error: string | null;
 
-  // Actions
   fetchSessions: (workspaceId?: string) => Promise<void>;
   createSession: (data: TerminalSessionCreate) => Promise<TerminalSession>;
   closeSession: (id: string) => Promise<void>;
@@ -18,7 +17,7 @@ interface SessionState {
   clearError: () => void;
 }
 
-export const useSessionStore = create<SessionState>((set, get) => ({
+export const useSessionStore = create<SessionState>((set) => ({
   sessions: [],
   activeSession: null,
   loading: false,
@@ -56,8 +55,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       await sessionsApi.close(id);
       set((state) => ({
         sessions: state.sessions.filter((s) => s.id !== id),
-        activeSession:
-          state.activeSession?.id === id ? null : state.activeSession,
+        activeSession: state.activeSession?.id === id ? null : state.activeSession,
         loading: false,
       }));
     } catch (err) {
@@ -71,8 +69,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       const session = await sessionsApi.resize(id, cols, rows);
       set((state) => ({
         sessions: state.sessions.map((s) => (s.id === id ? session : s)),
-        activeSession:
-          state.activeSession?.id === id ? session : state.activeSession,
+        activeSession: state.activeSession?.id === id ? session : state.activeSession,
       }));
     } catch (err) {
       console.error('Failed to resize session:', err);
@@ -85,9 +82,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
 
   updateSessionStatus: (id: string, status: TerminalSession['status']) => {
     set((state) => ({
-      sessions: state.sessions.map((s) =>
-        s.id === id ? { ...s, status } : s
-      ),
+      sessions: state.sessions.map((s) => (s.id === id ? { ...s, status } : s)),
       activeSession:
         state.activeSession?.id === id
           ? { ...state.activeSession, status }

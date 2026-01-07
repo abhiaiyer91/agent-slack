@@ -9,16 +9,16 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #1a1b26;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #33467c;
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #7aa2f7;
+  background: rgba(255, 255, 255, 0.2);
 }
 
 /* Terminal container */
@@ -29,44 +29,107 @@
 
 .terminal-container .xterm {
   height: 100%;
-  padding: 8px;
+  padding: 8px 12px;
 }
 
 .terminal-container .xterm-viewport {
   overflow-y: auto !important;
 }
 
+.terminal-container .xterm-screen {
+  padding: 4px;
+}
+
 /* Animations */
-@keyframes pulse-cursor {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+@keyframes slide-up {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
-.animate-pulse-cursor {
-  animation: pulse-cursor 1s ease-in-out infinite;
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
 }
 
-/* AI Chat panel */
-.ai-panel {
-  scrollbar-gutter: stable;
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(99, 102, 241, 0.5);
+  }
 }
 
-/* Code blocks in AI responses */
-.ai-response pre {
-  background: #15161e;
-  border-radius: 0.5rem;
-  padding: 1rem;
-  overflow-x: auto;
-  margin: 0.5rem 0;
-}
-
-.ai-response code {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.875rem;
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
 }
 
 /* Selection colors */
 ::selection {
-  background: #33467c;
-  color: #c0caf5;
+  background: rgba(99, 102, 241, 0.4);
+  color: #fff;
+}
+
+/* Prose overrides for AI panel */
+.prose pre {
+  background: #0d0d12;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.prose code {
+  color: #7dcfff;
+}
+
+/* Focus styles */
+input:focus,
+textarea:focus,
+button:focus {
+  outline: none;
+}
+
+/* Custom checkbox */
+input[type="checkbox"] {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  position: relative;
+}
+
+input[type="checkbox"]:checked {
+  background: #6366f1;
+  border-color: #6366f1;
+}
+
+input[type="checkbox"]:checked::after {
+  content: '✓';
+  position: absolute;
+  color: white;
+  font-size: 10px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glass effect */
+.glass {
+  background: rgba(22, 22, 30, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }

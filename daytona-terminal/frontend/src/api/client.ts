@@ -16,7 +16,7 @@ async function fetchApi<T>(
   options: RequestInit = {}
 ): Promise<T> {
   const url = `${API_BASE}${endpoint}`;
-  
+
   const response = await fetch(url, {
     ...options,
     headers: {
@@ -26,8 +26,8 @@ async function fetchApi<T>(
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
-    throw new ApiError(response.status, error.detail || 'Request failed');
+    const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+    throw new ApiError(response.status, error.error || error.message || 'Request failed');
   }
 
   if (response.status === 204) {
@@ -41,7 +41,7 @@ async function fetchApi<T>(
 export const workspacesApi = {
   list: (page = 1, perPage = 20) =>
     fetchApi<{ workspaces: import('../types').Workspace[]; total: number }>(
-      `/workspaces?page=${page}&per_page=${perPage}`
+      `/workspaces?page=${page}&perPage=${perPage}`
     ),
 
   get: (id: string) =>
@@ -67,19 +67,17 @@ export const workspacesApi = {
     }),
 
   execute: (id: string, command: string, workingDir?: string) =>
-    fetchApi<{ output: string; exit_code: number }>(
-      `/workspaces/${id}/exec?command=${encodeURIComponent(command)}${
-        workingDir ? `&working_dir=${encodeURIComponent(workingDir)}` : ''
-      }`,
-      { method: 'POST' }
-    ),
+    fetchApi<{ output: string; exitCode: number }>(`/workspaces/${id}/exec`, {
+      method: 'POST',
+      body: JSON.stringify({ command, workingDir }),
+    }),
 };
 
 // Session API
 export const sessionsApi = {
   list: (workspaceId?: string) =>
     fetchApi<import('../types').TerminalSession[]>(
-      `/sessions${workspaceId ? `?workspace_id=${workspaceId}` : ''}`
+      `/sessions${workspaceId ? `?workspaceId=${workspaceId}` : ''}`
     ),
 
   get: (id: string) =>
@@ -101,9 +99,10 @@ export const sessionsApi = {
     }),
 
   getContext: (id: string, maxBytes = 10000) =>
-    fetchApi<{ context: string }>(
-      `/sessions/${id}/context?max_bytes=${maxBytes}`
-    ),
+    fetchApi<{ context: string }>(`/sessions/${id}/context?maxBytes=${maxBytes}`),
+
+  getBlocks: (id: string, limit = 20) =>
+    fetchApi<{ blocks: import('../types').CommandBlock[] }>(`/sessions/${id}/blocks?limit=${limit}`),
 };
 
 // AI API
@@ -119,12 +118,10 @@ export const aiApi = {
     assistantType: import('../types').AIAssistantType = 'claude',
     systemPrompt?: string
   ) =>
-    fetchApi<import('../types').AIConversation>(
-      `/ai/conversations?session_id=${sessionId}&assistant_type=${assistantType}${
-        systemPrompt ? `&system_prompt=${encodeURIComponent(systemPrompt)}` : ''
-      }`,
-      { method: 'POST' }
-    ),
+    fetchApi<import('../types').AIConversation>('/ai/conversations', {
+      method: 'POST',
+      body: JSON.stringify({ sessionId, assistantType, systemPrompt }),
+    }),
 
   getConversation: (id: string) =>
     fetchApi<import('../types').AIConversation>(`/ai/conversations/${id}`),
@@ -143,6 +140,18 @@ export const aiApi = {
 
   clearConversation: (id: string) =>
     fetchApi<void>(`/ai/conversations/${id}/clear`, { method: 'POST' }),
+
+  analyze: (sessionId: string, output: string) =>
+    fetchApi<{ suggestion: string | null; commands: string[] }>('/ai/analyze', {
+      method: 'POST',
+      body: JSON.stringify({ sessionId, output }),
+    }),
+
+  getCompletions: (sessionId: string, partial: string) =>
+    fetchApi<{ completions: string[] }>('/ai/completions', {
+      method: 'POST',
+      body: JSON.stringify({ sessionId, partial }),
+    }),
 };
 
 export { ApiError };
