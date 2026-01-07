@@ -1,0 +1,22 @@
+{
+  "name": "sandterm",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The AI-powered terminal for any sandbox",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev --filter=@sandterm/server",
+    "dev:web": "turbo run dev --filter=@sandterm/web",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "type-check": "turbo run type-check",
+    "start": "node packages/server/dist/index.js",
+    "cli": "node packages/cli/dist/index.js"
+  },
+  "devDependencies": {
+    "turbo": "^1.12.4"
+  }
+}
