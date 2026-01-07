@@ -1,160 +1,152 @@
 # 🖥️ sandterm
 
-> The AI-powered terminal for any sandbox provider
+> **The AI-powered terminal that destroys Warp**
 
-sandterm is a provider-agnostic AI terminal that runs anywhere. Connect to local terminals, Daytona workspaces, E2B sandboxes, or build your own provider.
+sandterm is a provider-agnostic AI terminal that runs anywhere - local, E2B, Daytona, or your own cloud. It's everything Warp does, but better.
+
+## 🔥 Why sandterm > Warp
+
+| Feature | Warp | sandterm |
+|---------|------|----------|
+| **AI** | Basic GPT chat | Multi-model (Claude, GPT-4) + native agent support |
+| **Agents** | ❌ None | ✅ Claude Code, Codex, Aider built-in |
+| **Predictive** | Basic autocomplete | Full command prediction with context |
+| **Runs On** | Local only | Any sandbox (E2B, Daytona, Docker, local) |
+| **Voice** | ❌ None | ✅ Voice commands |
+| **Workflows** | Simple saved commands | Conditional workflows with AI generation |
+| **Plugins** | ❌ None | ✅ Full plugin system |
+| **Open Source** | ❌ Closed | ✅ Open source |
 
 ## ✨ Features
 
-- **🔌 Provider Agnostic**: Works with Local, Daytona, E2B, or custom providers
-- **🤖 AI-Powered**: Automatic error detection, fixes, and intelligent suggestions
-- **💻 Modern UI**: Beautiful block-based terminal with command history
-- **⌨️ Powerful CLI**: Full-featured command-line interface
-- **🔧 Multi-Model AI**: Works with Claude (Anthropic) or GPT-4 (OpenAI)
-- **📦 Monorepo**: Modular architecture with shared types
+### 🤖 AI That Actually Helps
+
+- **Command Prediction**: Predicts what you'll type before you type it
+- **Auto-Fix**: Detects errors and suggests fixes automatically
+- **Context-Aware Chat**: AI knows your cwd, git status, recent commands
+- **Multi-Model**: Works with Claude, GPT-4, or local LLMs
+
+### 🚀 Native AI Agent Support
+
+Run AI coding assistants directly in sandboxes:
+
+```bash
+# Run Claude Code
+sandterm agent start claude-code --sandbox my-project
+
+# Run Aider
+sandterm agent start aider --sandbox my-project
+
+# Run OpenAI Codex
+sandterm agent start codex --sandbox my-project
+```
+
+### 🎤 Voice Commands
+
+Just speak:
+- *"git status"* → runs `git status`
+- *"commit update readme"* → runs `git commit -m "update readme"`
+- *"run dev"* → runs `npm run dev`
+- *"stop"* → sends Ctrl+C
+
+### ⚡ Workflow Engine
+
+Create and share automated workflows:
+
+```typescript
+const workflow = await workflowEngine.createWorkflow({
+  name: 'Deploy',
+  steps: [
+    { id: '1', name: 'Test', command: 'npm test', onError: 'stop' },
+    { id: '2', name: 'Build', command: 'npm run build' },
+    { id: '3', name: 'Deploy', command: 'npm run deploy' },
+  ],
+});
+```
+
+Or generate with AI:
+```typescript
+const workflow = await workflowEngine.generateWorkflow('deploy to production with tests');
+```
+
+### 🔌 Plugin System
+
+Extend sandterm with plugins:
+
+```typescript
+const myPlugin: Plugin = {
+  id: 'my-plugin',
+  name: 'My Plugin',
+  version: '1.0.0',
+  
+  onCommand(command) {
+    if (command === 'gs') return { command: 'git status' };
+  },
+  
+  commands: [
+    { name: 'deploy', execute: async () => '...' },
+  ],
+};
+
+pluginManager.loadPlugin(myPlugin);
+```
+
+### ☁️ Any Sandbox Provider
+
+Run on local, E2B, Daytona, or build your own:
+
+```bash
+# Local (default)
+SANDTERM_PROVIDER=local pnpm start
+
+# E2B cloud sandboxes
+E2B_API_KEY=xxx SANDTERM_PROVIDER=e2b pnpm start
+
+# Daytona workspaces
+DAYTONA_API_KEY=xxx SANDTERM_PROVIDER=daytona pnpm start
+```
 
 ## 📦 Packages
 
 | Package | Description |
 |---------|-------------|
-| `@sandterm/core` | Core engine, server, types, and AI |
-| `@sandterm/providers` | Built-in providers (Local, Daytona, E2B) |
-| `@sandterm/server` | Combined server with all providers |
+| `@sandterm/core` | Engine, AI, workflows, plugins, types |
+| `@sandterm/providers` | Local, E2B, Daytona providers |
+| `@sandterm/server` | API server |
 | `@sandterm/cli` | Command-line interface |
-| `@sandterm/web` | Web-based terminal UI |
+| `@sandterm/web` | React web UI |
 
 ## 🚀 Quick Start
 
-### Prerequisites
-
-- Node.js 20+
-- pnpm (recommended) or npm
-
-### Installation
-
 ```bash
-# Clone the repo
+# Clone
 git clone https://github.com/yourname/sandterm.git
 cd sandterm
 
-# Install dependencies
+# Install
 pnpm install
 
-# Build all packages
+# Build
 pnpm build
+
+# Run
+pnpm start        # Start server
+pnpm dev:web      # Start web UI
 ```
 
-### Run Locally
+## 🔧 Configuration
 
 ```bash
-# Start the server (local provider)
-pnpm start
+# .env
+SANDTERM_PROVIDER=local
 
-# In another terminal, use the CLI
-pnpm cli list              # List sandboxes
-pnpm cli create my-project # Create sandbox
-pnpm cli connect <id>      # Connect to terminal
+# AI (pick one or both)
+ANTHROPIC_API_KEY=sk-ant-...
+OPENAI_API_KEY=sk-...
 
-# Or run the web UI
-pnpm dev:web
-```
-
-## 🔌 Providers
-
-### Local (Default)
-
-Runs directly on your machine using node-pty.
-
-```bash
-# No configuration needed
-SANDTERM_PROVIDER=local pnpm start
-```
-
-### E2B (Compute SDK)
-
-Cloud sandboxes using [E2B](https://e2b.dev) - perfect for AI agents.
-
-sandterm uses the official **E2B SDK** (`e2b` v1.x) which provides:
-- Secure cloud sandboxes
-- PTY terminals
-- File system access
-- Command execution
-- Multiple templates (base, python, node, etc.)
-
-```bash
-# Set your API key
-export E2B_API_KEY=your-key-here
-SANDTERM_PROVIDER=e2b pnpm start
-```
-
-#### E2B Templates
-
-When creating a sandbox, you can specify a template:
-
-```typescript
-import { createSandterm, providerRegistry } from '@sandterm/core';
-import { createE2BProvider } from '@sandterm/providers';
-
-providerRegistry.register('e2b', createE2BProvider);
-
-const sandterm = createSandterm({
-  provider: 'e2b',
-  providerConfig: { apiKey: 'your-e2b-api-key' }
-});
-
-await sandterm.init();
-
-// Create a Python sandbox
-const sandbox = await sandterm.createSandbox({
-  name: 'my-python-env',
-  template: 'python',  // or 'node', 'go', 'rust', 'base'
-});
-```
-
-### Daytona
-
-Cloud workspaces using [Daytona](https://daytona.io).
-
-```bash
-# Set your API key
-export DAYTONA_API_KEY=your-key-here
-SANDTERM_PROVIDER=daytona pnpm start
-```
-
-### Custom Provider
-
-Create your own provider by implementing `SandboxProvider`:
-
-```typescript
-import { SandboxProvider, providerRegistry } from '@sandterm/core';
-
-class MyProvider implements SandboxProvider {
-  readonly id = 'my-provider';
-  readonly name = 'My Provider';
-  readonly description = 'Custom cloud provider';
-
-  // Implement the interface...
-}
-
-providerRegistry.register('my-provider', () => new MyProvider());
-```
-
-## 🤖 AI Configuration
-
-sandterm uses AI for:
-- Error detection and auto-fix suggestions
-- Command prediction
-- Interactive chat
-
-```bash
-# Anthropic (Claude) - recommended
-export ANTHROPIC_API_KEY=your-key-here
-
-# Or OpenAI (GPT-4)
-export OPENAI_API_KEY=your-key-here
-
-# Choose provider
-export DEFAULT_AI_PROVIDER=anthropic  # or 'openai'
+# Cloud providers (optional)
+E2B_API_KEY=...
+DAYTONA_API_KEY=...
 ```
 
 ## 📖 API
@@ -165,50 +157,41 @@ export DEFAULT_AI_PROVIDER=anthropic  # or 'openai'
 GET  /api/v1              - Server info
 GET  /api/v1/sandboxes    - List sandboxes
 POST /api/v1/sandboxes    - Create sandbox
-GET  /api/v1/sandboxes/:id - Get sandbox
-POST /api/v1/sandboxes/:id/start - Start sandbox
-POST /api/v1/sandboxes/:id/stop  - Stop sandbox
-DELETE /api/v1/sandboxes/:id - Delete sandbox
-
 POST /api/v1/sessions     - Create terminal session
-GET  /api/v1/sessions/:id/blocks - Get command blocks
-DELETE /api/v1/sessions/:id - Close session
-
 POST /api/v1/ai/chat      - AI chat
 ```
 
 ### WebSocket
 
-Connect to `/ws/terminal/:sessionId` for real-time terminal:
-
 ```javascript
-const ws = new WebSocket('ws://localhost:8000/ws/terminal/session-id');
+const ws = new WebSocket('ws://localhost:8000/ws/terminal/SESSION_ID');
 
 ws.onmessage = (e) => {
   const msg = JSON.parse(e.data);
-  // msg.type: 'output' | 'suggestion' | 'block'
+  // Types: 'output', 'suggestion', 'block', 'prediction'
 };
 
-ws.send(JSON.stringify({ type: 'input', data: 'ls -la\n' }));
+ws.send(JSON.stringify({ type: 'input', data: 'ls\n' }));
 ws.send(JSON.stringify({ type: 'resize', cols: 120, rows: 40 }));
 ```
 
-## 🛠️ Development
+## 🎯 Roadmap
 
-```bash
-# Start everything in dev mode
-pnpm dev
+- [x] Provider-agnostic architecture
+- [x] AI-powered command prediction
+- [x] Native AI agent support
+- [x] Voice commands
+- [x] Workflow engine
+- [x] Plugin system
+- [x] Themes and split panes
+- [ ] Session sharing
+- [ ] Collaborative editing
+- [ ] Mobile app
+- [ ] VS Code extension
 
-# Run specific packages
-pnpm dev:core  # Server only
-pnpm dev:web   # Web UI only
+## 🤝 Contributing
 
-# Type check
-pnpm type-check
-
-# Lint
-pnpm lint
-```
+PRs welcome! Let's make the best terminal ever.
 
 ## 📜 License
 
