@@ -128,3 +128,6 @@ export type SandtermEvent =
   | { type: 'disconnected' };
 
 export type SandtermEventHandler = (event: SandtermEvent) => void;
+
+// Re-export provider types
+export * from './provider.js';

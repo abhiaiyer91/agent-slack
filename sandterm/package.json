@@ -2,23 +2,21 @@
   "name": "sandterm",
   "version": "0.1.0",
   "private": true,
-  "description": "The AI-powered terminal for any sandbox provider",
+  "description": "The AI-powered terminal for any sandbox",
   "workspaces": [
     "packages/*"
   ],
   "scripts": {
-    "dev": "turbo run dev",
+    "dev": "turbo run dev --filter=@sandterm/server",
+    "dev:web": "turbo run dev --filter=@sandterm/web",
     "build": "turbo run build",
-    "test": "turbo run test",
     "lint": "turbo run lint",
+    "test": "turbo run test",
     "type-check": "turbo run type-check",
-    "clean": "turbo run clean && rm -rf node_modules"
+    "start": "node packages/server/dist/index.js",
+    "cli": "node packages/cli/dist/index.js"
   },
   "devDependencies": {
-    "turbo": "^1.12.4",
-    "typescript": "^5.3.3"
-  },
-  "engines": {
-    "node": ">=18.0.0"
+    "turbo": "^1.12.4"
   }
 }

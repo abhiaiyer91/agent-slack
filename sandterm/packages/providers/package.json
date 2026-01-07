@@ -1,0 +1,50 @@
+{
+  "name": "@sandterm/providers",
+  "version": "0.1.0",
+  "description": "Sandbox providers for sandterm - Local, Daytona, E2B, and more",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./local": {
+      "types": "./dist/local/index.d.ts",
+      "import": "./dist/local/index.js"
+    },
+    "./daytona": {
+      "types": "./dist/daytona/index.d.ts",
+      "import": "./dist/daytona/index.js"
+    },
+    "./e2b": {
+      "types": "./dist/e2b/index.d.ts",
+      "import": "./dist/e2b/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest",
+    "lint": "eslint src --ext .ts",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@sandterm/core": "workspace:*",
+    "@e2b/code-interpreter": "^2.3.3",
+    "e2b": "^1.1.0",
+    "node-pty": "^1.0.0",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.16",
+    "@types/uuid": "^9.0.8",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.2"
+  },
+  "peerDependencies": {
+    "@sandterm/core": "workspace:*"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "@sandterm/server",
+  "version": "0.1.0",
+  "description": "Sandterm API server",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "sandterm-server": "./dist/index.js"
+  },
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "build": "tsc",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@sandterm/core": "workspace:*",
+    "@sandterm/providers": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.16",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
+  }
+}
