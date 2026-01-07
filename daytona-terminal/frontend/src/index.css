@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a1b26;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #33467c;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #7aa2f7;
+}
+
+/* Terminal container */
+.terminal-container {
+  height: 100%;
+  width: 100%;
+}
+
+.terminal-container .xterm {
+  height: 100%;
+  padding: 8px;
+}
+
+.terminal-container .xterm-viewport {
+  overflow-y: auto !important;
+}
+
+/* Animations */
+@keyframes pulse-cursor {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-pulse-cursor {
+  animation: pulse-cursor 1s ease-in-out infinite;
+}
+
+/* AI Chat panel */
+.ai-panel {
+  scrollbar-gutter: stable;
+}
+
+/* Code blocks in AI responses */
+.ai-response pre {
+  background: #15161e;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  overflow-x: auto;
+  margin: 0.5rem 0;
+}
+
+.ai-response code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.875rem;
+}
+
+/* Selection colors */
+::selection {
+  background: #33467c;
+  color: #c0caf5;
+}

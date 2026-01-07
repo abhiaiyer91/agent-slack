@@ -1,0 +1,5 @@
+# Daytona Terminal CLI Dependencies
+typer[all]==0.9.0
+rich==13.7.0
+httpx==0.26.0
+websockets==12.0
