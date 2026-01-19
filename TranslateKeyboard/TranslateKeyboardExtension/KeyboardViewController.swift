@@ -9,6 +9,7 @@ class KeyboardViewController: UIInputViewController {
     private let settings = TranslationSettings.shared
     private let translationService = TranslationService.shared
     private let learningService = LearningService.shared
+    private let smartSuggestions = SmartSuggestionsService.shared
     private let speechSynthesizer = AVSpeechSynthesizer()
     
     // Text buffer for translation
@@ -263,12 +264,22 @@ class KeyboardViewController: UIInputViewController {
                     to: self.settings.sourceLanguage      // English (so you understand)
                 )
                 
+                // Generate smart suggestions based on what they said
+                let suggestions = self.smartSuggestions.generateSuggestions(
+                    for: clipboardText,
+                    translatedMessage: result.translatedText
+                )
+                
                 await MainActor.run {
-                    // Post notification for clipboard translation
+                    // Post notification for clipboard translation with suggestions
                     NotificationCenter.default.post(
                         name: .clipboardTranslationUpdated,
                         object: nil,
-                        userInfo: ["translation": result.translatedText, "original": clipboardText]
+                        userInfo: [
+                            "translation": result.translatedText,
+                            "original": clipboardText,
+                            "suggestions": suggestions.map { ["french": $0.french, "english": $0.english] }
+                        ]
                     )
                     
                     // Save to learning history (learning French from what she says)

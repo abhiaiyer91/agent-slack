@@ -24,11 +24,224 @@ struct ContentView: View {
                 }
                 .tag(2)
             
+            ToolsView()
+                .tabItem {
+                    Label("Tools", systemImage: "wrench.and.screwdriver.fill")
+                }
+                .tag(3)
+            
             SettingsView()
                 .tabItem {
                     Label("Settings", systemImage: "gearshape.fill")
                 }
-                .tag(3)
+                .tag(4)
+        }
+    }
+}
+
+// MARK: - Tools View (Grammar, Import, Accent Practice)
+struct ToolsView: View {
+    var body: some View {
+        NavigationStack {
+            List {
+                // Grammar Section
+                Section {
+                    NavigationLink {
+                        GrammarView()
+                    } label: {
+                        ToolRow(
+                            icon: "book.fill",
+                            iconColor: .purple,
+                            title: "Grammar Guide",
+                            subtitle: "Learn French grammar rules"
+                        )
+                    }
+                } header: {
+                    Text("Learn")
+                }
+                
+                // Practice Section
+                Section {
+                    NavigationLink {
+                        AccentPracticeView()
+                    } label: {
+                        ToolRow(
+                            icon: "waveform.circle.fill",
+                            iconColor: .orange,
+                            title: "Accent Practice",
+                            subtitle: "Record and compare your pronunciation"
+                        )
+                    }
+                } header: {
+                    Text("Practice")
+                }
+                
+                // Import Section
+                Section {
+                    NavigationLink {
+                        ConversationImportView()
+                    } label: {
+                        ToolRow(
+                            icon: "doc.text.magnifyingglass",
+                            iconColor: .blue,
+                            title: "Import Conversation",
+                            subtitle: "Analyze pasted chat messages"
+                        )
+                    }
+                } header: {
+                    Text("Import")
+                }
+                
+                // Sync Section
+                Section {
+                    NavigationLink {
+                        CloudSyncView()
+                    } label: {
+                        ToolRow(
+                            icon: "icloud.fill",
+                            iconColor: .cyan,
+                            title: "iCloud Sync",
+                            subtitle: "Sync learning across devices"
+                        )
+                    }
+                } header: {
+                    Text("Sync")
+                }
+            }
+            .navigationTitle("Tools")
+        }
+    }
+}
+
+// MARK: - Tool Row
+struct ToolRow: View {
+    let icon: String
+    let iconColor: Color
+    let title: String
+    let subtitle: String
+    
+    var body: some View {
+        HStack(spacing: 16) {
+            Image(systemName: icon)
+                .font(.title2)
+                .foregroundColor(.white)
+                .frame(width: 44, height: 44)
+                .background(iconColor)
+                .cornerRadius(10)
+            
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.body)
+                    .fontWeight(.medium)
+                
+                Text(subtitle)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+// MARK: - Cloud Sync View
+struct CloudSyncView: View {
+    @StateObject private var syncService = CloudSyncService.shared
+    
+    var body: some View {
+        List {
+            // Status Section
+            Section {
+                HStack {
+                    Image(systemName: syncService.syncStatus.icon)
+                        .font(.title2)
+                        .foregroundColor(statusColor)
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("iCloud Status")
+                            .font(.body)
+                        Text(syncService.syncStatus.rawValue)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    Spacer()
+                    
+                    if syncService.isSyncing {
+                        ProgressView()
+                    }
+                }
+                
+                if let lastSync = syncService.lastSyncDate {
+                    HStack {
+                        Text("Last Synced")
+                        Spacer()
+                        Text(lastSync, style: .relative)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                
+                if let error = syncService.syncError {
+                    HStack {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundColor(.orange)
+                        Text(error)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+            } header: {
+                Text("Status")
+            }
+            
+            // Actions Section
+            Section {
+                Button {
+                    Task {
+                        await syncService.performFullSync()
+                    }
+                } label: {
+                    HStack {
+                        Image(systemName: "arrow.triangle.2.circlepath")
+                        Text("Sync Now")
+                    }
+                }
+                .disabled(syncService.syncStatus != .available || syncService.isSyncing)
+            } header: {
+                Text("Actions")
+            }
+            
+            // Info Section
+            Section {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("What Gets Synced")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    
+                    ForEach(["Learning cards & progress", "Conversation history", "Favorite phrases", "Settings"], id: \.self) { item in
+                        HStack(spacing: 8) {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(.green)
+                                .font(.caption)
+                            Text(item)
+                                .font(.caption)
+                        }
+                    }
+                }
+                .padding(.vertical, 4)
+            } header: {
+                Text("Information")
+            }
+        }
+        .navigationTitle("iCloud Sync")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+    
+    private var statusColor: Color {
+        switch syncService.syncStatus {
+        case .available: return .green
+        case .noAccount, .restricted: return .red
+        case .temporarilyUnavailable: return .orange
+        case .unknown: return .gray
         }
     }
 }

@@ -27,6 +27,7 @@ struct KeyboardView: View {
     @State private var showLearningDetail = false
     @State private var clipboardTranslation = ""
     @State private var showClipboardTranslation = false
+    @State private var smartSuggestions: [[String: String]] = []
     
     @StateObject private var settings = TranslationSettings.shared
     
@@ -83,6 +84,9 @@ struct KeyboardView: View {
         .onReceive(NotificationCenter.default.publisher(for: .clipboardTranslationUpdated)) { notification in
             if let translation = notification.userInfo?["translation"] as? String {
                 clipboardTranslation = translation
+            }
+            if let suggestions = notification.userInfo?["suggestions"] as? [[String: String]] {
+                smartSuggestions = suggestions
             }
         }
     }
@@ -195,34 +199,66 @@ struct KeyboardView: View {
     
     // Reverse translation (reading her messages)
     private var reverseTranslationView: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Paste French text to translate")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
+        VStack(spacing: 8) {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Paste French text to translate")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                    
+                    if !clipboardTranslation.isEmpty {
+                        Text(clipboardTranslation)
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(.primary)
+                            .lineLimit(2)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
                 
-                if !clipboardTranslation.isEmpty {
-                    Text(clipboardTranslation)
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundColor(.primary)
-                        .lineLimit(2)
+                // Paste & translate button
+                Button(action: { onReverseTranslate?() }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "doc.on.clipboard")
+                        Text("Paste")
+                            .font(.caption)
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(Color.purple)
+                    .foregroundColor(.white)
+                    .cornerRadius(8)
                 }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
             
-            // Paste & translate button
-            Button(action: { onReverseTranslate?() }) {
-                HStack(spacing: 4) {
-                    Image(systemName: "doc.on.clipboard")
-                    Text("Paste")
-                        .font(.caption)
+            // Smart reply suggestions
+            if !smartSuggestions.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(smartSuggestions.indices, id: \.self) { index in
+                            let suggestion = smartSuggestions[index]
+                            Button {
+                                if let french = suggestion["french"] {
+                                    onKeyPress(french)
+                                }
+                            } label: {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(suggestion["french"] ?? "")
+                                        .font(.caption)
+                                        .fontWeight(.medium)
+                                    Text(suggestion["english"] ?? "")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                }
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 6)
+                                .background(Color.blue.opacity(0.1))
+                                .cornerRadius(8)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
                 }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 6)
-                .background(Color.purple)
-                .foregroundColor(.white)
-                .cornerRadius(8)
             }
         }
     }
