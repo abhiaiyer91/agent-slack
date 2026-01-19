@@ -12,17 +12,23 @@ struct ContentView: View {
                 }
                 .tag(0)
             
+            PhrasesView()
+                .tabItem {
+                    Label("Phrases", systemImage: "text.bubble.fill")
+                }
+                .tag(1)
+            
             LearnView()
                 .tabItem {
                     Label("Learn", systemImage: "book.fill")
                 }
-                .tag(1)
+                .tag(2)
             
             SettingsView()
                 .tabItem {
                     Label("Settings", systemImage: "gearshape.fill")
                 }
-                .tag(2)
+                .tag(3)
         }
     }
 }

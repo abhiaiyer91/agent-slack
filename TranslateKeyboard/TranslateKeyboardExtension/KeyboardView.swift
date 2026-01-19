@@ -15,6 +15,7 @@ struct KeyboardView: View {
     // Additional callbacks for learning features
     var onReverseTranslate: (() -> Void)?
     var onSaveToLearn: (() -> Void)?
+    var onSpeak: ((String) -> Void)?
     
     // MARK: - State
     @State private var isShiftEnabled = false
@@ -137,7 +138,7 @@ struct KeyboardView: View {
     
     // Outgoing translation (you typing to her)
     private var outgoingTranslationView: some View {
-        HStack {
+        HStack(spacing: 8) {
             VStack(alignment: .leading, spacing: 2) {
                 // Show original if learning mode
                 if settings.learningMode != .off && settings.showOriginalText {
@@ -165,6 +166,13 @@ struct KeyboardView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .onTapGesture {
                 showLearningDetail.toggle()
+            }
+            
+            // Audio pronunciation button
+            Button(action: { onSpeak?(translatedText) }) {
+                Image(systemName: "speaker.wave.2.fill")
+                    .font(.body)
+                    .foregroundColor(.purple)
             }
             
             // Save to learn button
@@ -452,7 +460,8 @@ struct KeyboardView_Previews: PreviewProvider {
             hasFullAccess: true,
             currentText: .constant("Hello"),
             onReverseTranslate: {},
-            onSaveToLearn: {}
+            onSaveToLearn: {},
+            onSpeak: { _ in }
         )
         .frame(height: 350)
     }

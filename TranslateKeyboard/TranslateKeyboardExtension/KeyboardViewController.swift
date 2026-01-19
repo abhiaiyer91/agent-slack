@@ -1,5 +1,6 @@
 import UIKit
 import SwiftUI
+import AVFoundation
 
 class KeyboardViewController: UIInputViewController {
     
@@ -8,6 +9,7 @@ class KeyboardViewController: UIInputViewController {
     private let settings = TranslationSettings.shared
     private let translationService = TranslationService.shared
     private let learningService = LearningService.shared
+    private let speechSynthesizer = AVSpeechSynthesizer()
     
     // Text buffer for translation
     private var textBuffer = ""
@@ -59,6 +61,9 @@ class KeyboardViewController: UIInputViewController {
             },
             onSaveToLearn: { [weak self] in
                 self?.saveCurrentToLearning()
+            },
+            onSpeak: { [weak self] text in
+                self?.speakText(text)
             }
         )
         
@@ -325,6 +330,39 @@ class KeyboardViewController: UIInputViewController {
     private func provideHapticFeedback() {
         let generator = UIImpactFeedbackGenerator(style: .light)
         generator.impactOccurred()
+    }
+    
+    // MARK: - Text-to-Speech
+    private func speakText(_ text: String) {
+        guard !text.isEmpty else { return }
+        
+        // Stop any current speech
+        if speechSynthesizer.isSpeaking {
+            speechSynthesizer.stopSpeaking(at: .immediate)
+        }
+        
+        let utterance = AVSpeechUtterance(string: text)
+        
+        // Set voice for target language
+        let languageCode = settings.targetLanguage.code
+        if let voice = AVSpeechSynthesisVoice(language: languageCode) {
+            utterance.voice = voice
+        } else if let voice = AVSpeechSynthesisVoice(language: "\(languageCode)-\(languageCode.uppercased())") {
+            utterance.voice = voice
+        }
+        
+        // Slightly slower for learning
+        utterance.rate = 0.45
+        utterance.pitchMultiplier = 1.0
+        utterance.volume = 1.0
+        
+        speechSynthesizer.speak(utterance)
+        
+        // Haptic feedback to indicate speaking
+        if settings.hapticFeedbackEnabled {
+            let generator = UINotificationFeedbackGenerator()
+            generator.notificationOccurred(.success)
+        }
     }
     
     // MARK: - Text Input
