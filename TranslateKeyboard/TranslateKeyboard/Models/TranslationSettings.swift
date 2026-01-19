@@ -23,6 +23,32 @@ enum TranslationProvider: String, Codable, CaseIterable {
     }
 }
 
+/// Learning mode options
+enum LearningMode: String, Codable, CaseIterable {
+    case off
+    case subtle      // Just show translation
+    case learning    // Show word breakdown + pronunciation
+    case immersive   // Full learning with flashcard prompts
+    
+    var displayName: String {
+        switch self {
+        case .off: return "Off"
+        case .subtle: return "Subtle"
+        case .learning: return "Learning"
+        case .immersive: return "Immersive"
+        }
+    }
+    
+    var description: String {
+        switch self {
+        case .off: return "Just translate, no learning features"
+        case .subtle: return "Show translations with minimal interruption"
+        case .learning: return "Word breakdown and pronunciation hints"
+        case .immersive: return "Full learning mode with review prompts"
+        }
+    }
+}
+
 /// Manages all translation and keyboard settings
 /// Uses UserDefaults with App Group for sharing between app and keyboard extension
 class TranslationSettings: ObservableObject {
@@ -46,6 +72,11 @@ class TranslationSettings: ObservableObject {
         static let translationProvider = "translationProvider"
         static let apiKey = "apiKey"
         static let recentLanguages = "recentLanguages"
+        static let learningMode = "learningMode"
+        static let learningHistory = "learningHistory"
+        static let showPronunciation = "showPronunciation"
+        static let showWordBreakdown = "showWordBreakdown"
+        static let conversationHistory = "conversationHistory"
     }
     
     // MARK: - Published Properties
@@ -89,6 +120,27 @@ class TranslationSettings: ObservableObject {
         didSet { saveRecentLanguages() }
     }
     
+    // MARK: - Learning Properties
+    @Published var learningMode: LearningMode {
+        didSet { defaults.set(learningMode.rawValue, forKey: Keys.learningMode) }
+    }
+    
+    @Published var showPronunciation: Bool {
+        didSet { defaults.set(showPronunciation, forKey: Keys.showPronunciation) }
+    }
+    
+    @Published var showWordBreakdown: Bool {
+        didSet { defaults.set(showWordBreakdown, forKey: Keys.showWordBreakdown) }
+    }
+    
+    @Published var learningHistory: [LearningCard] {
+        didSet { saveLearningHistory() }
+    }
+    
+    @Published var conversationHistory: [ConversationExchange] {
+        didSet { saveConversationHistory() }
+    }
+    
     // MARK: - Initialization
     private init() {
         // Try to use App Group UserDefaults, fall back to standard
@@ -122,6 +174,19 @@ class TranslationSettings: ObservableObject {
         
         self.apiKey = defaults.string(forKey: Keys.apiKey) ?? ""
         self.recentLanguages = Self.loadRecentLanguages(from: defaults)
+        
+        // Learning settings
+        if let modeRaw = defaults.string(forKey: Keys.learningMode),
+           let mode = LearningMode(rawValue: modeRaw) {
+            self.learningMode = mode
+        } else {
+            self.learningMode = .learning
+        }
+        
+        self.showPronunciation = defaults.object(forKey: Keys.showPronunciation) as? Bool ?? true
+        self.showWordBreakdown = defaults.object(forKey: Keys.showWordBreakdown) as? Bool ?? true
+        self.learningHistory = Self.loadLearningHistory(from: defaults)
+        self.conversationHistory = Self.loadConversationHistory(from: defaults)
     }
     
     // MARK: - Language Persistence
@@ -154,6 +219,58 @@ class TranslationSettings: ObservableObject {
         recentLanguages = Array(recent.prefix(5))
     }
     
+    // MARK: - Learning History
+    private static func loadLearningHistory(from defaults: UserDefaults) -> [LearningCard] {
+        guard let data = defaults.data(forKey: Keys.learningHistory) else { return [] }
+        return (try? JSONDecoder().decode([LearningCard].self, from: data)) ?? []
+    }
+    
+    private func saveLearningHistory() {
+        if let data = try? JSONEncoder().encode(learningHistory) {
+            defaults.set(data, forKey: Keys.learningHistory)
+        }
+    }
+    
+    func addToLearningHistory(_ card: LearningCard) {
+        // Don't add duplicates
+        if !learningHistory.contains(where: { 
+            $0.originalText.lowercased() == card.originalText.lowercased() &&
+            $0.targetLanguage == card.targetLanguage
+        }) {
+            learningHistory.insert(card, at: 0)
+            // Keep last 100 cards
+            if learningHistory.count > 100 {
+                learningHistory = Array(learningHistory.prefix(100))
+            }
+        }
+    }
+    
+    func updateLearningCard(_ card: LearningCard) {
+        if let index = learningHistory.firstIndex(where: { $0.id == card.id }) {
+            learningHistory[index] = card
+        }
+    }
+    
+    // MARK: - Conversation History
+    private static func loadConversationHistory(from defaults: UserDefaults) -> [ConversationExchange] {
+        guard let data = defaults.data(forKey: Keys.conversationHistory) else { return [] }
+        return (try? JSONDecoder().decode([ConversationExchange].self, from: data)) ?? []
+    }
+    
+    private func saveConversationHistory() {
+        if let data = try? JSONEncoder().encode(conversationHistory) {
+            defaults.set(data, forKey: Keys.conversationHistory)
+        }
+    }
+    
+    func addConversationExchange(_ exchange: ConversationExchange) {
+        conversationHistory.insert(exchange, at: 0)
+        // Keep last 50 exchanges
+        if conversationHistory.count > 50 {
+            conversationHistory = Array(conversationHistory.prefix(50))
+        }
+    }
+    
     // MARK: - Reset
     func resetToDefaults() {
         sourceLanguage = .english
@@ -166,6 +283,14 @@ class TranslationSettings: ObservableObject {
         translationProvider = .apple
         apiKey = ""
         recentLanguages = []
+        learningMode = .learning
+        showPronunciation = true
+        showWordBreakdown = true
+    }
+    
+    func clearLearningHistory() {
+        learningHistory = []
+        conversationHistory = []
     }
     
     // MARK: - Convenience

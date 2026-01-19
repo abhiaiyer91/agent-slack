@@ -12,12 +12,20 @@ struct KeyboardView: View {
     
     @Binding var currentText: String
     
+    // Additional callbacks for learning features
+    var onReverseTranslate: (() -> Void)?
+    var onSaveToLearn: (() -> Void)?
+    
     // MARK: - State
     @State private var isShiftEnabled = false
     @State private var isCapsLock = false
     @State private var showNumbers = false
     @State private var showSymbols = false
     @State private var translatedText = ""
+    @State private var wordBreakdown: [(original: String, translated: String, pronunciation: String?)] = []
+    @State private var showLearningDetail = false
+    @State private var clipboardTranslation = ""
+    @State private var showClipboardTranslation = false
     
     @StateObject private var settings = TranslationSettings.shared
     
@@ -67,51 +75,190 @@ struct KeyboardView: View {
             if let translation = notification.userInfo?["translation"] as? String {
                 translatedText = translation
             }
+            if let breakdown = notification.userInfo?["wordBreakdown"] as? [(original: String, translated: String, pronunciation: String?)] {
+                wordBreakdown = breakdown
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .clipboardTranslationUpdated)) { notification in
+            if let translation = notification.userInfo?["translation"] as? String {
+                clipboardTranslation = translation
+            }
         }
     }
     
     // MARK: - Translation Preview Bar
     private var translationPreviewBar: some View {
-        HStack(spacing: 12) {
-            // Language indicators
-            HStack(spacing: 4) {
-                Text(settings.sourceLanguage.flag)
-                    .font(.caption)
-                Image(systemName: "arrow.right")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-                Text(settings.targetLanguage.flag)
-                    .font(.caption)
+        VStack(spacing: 0) {
+            // Main translation bar
+            HStack(spacing: 8) {
+                // Language toggle button (tap to swap for reverse translate)
+                Button(action: {
+                    showClipboardTranslation.toggle()
+                }) {
+                    HStack(spacing: 4) {
+                        Text(showClipboardTranslation ? settings.targetLanguage.flag : settings.sourceLanguage.flag)
+                            .font(.caption)
+                        Image(systemName: showClipboardTranslation ? "arrow.left" : "arrow.right")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                        Text(showClipboardTranslation ? settings.sourceLanguage.flag : settings.targetLanguage.flag)
+                            .font(.caption)
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(showClipboardTranslation ? Color.purple.opacity(0.2) : Color(.systemGray5))
+                    .cornerRadius(8)
+                }
+                
+                // Translation preview
+                if showClipboardTranslation {
+                    // Reverse translation mode (for reading her messages)
+                    reverseTranslationView
+                } else if !translatedText.isEmpty {
+                    // Normal outgoing translation
+                    outgoingTranslationView
+                } else {
+                    Text("Type to translate...")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
             }
             .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(Color(.systemGray5))
-            .cornerRadius(8)
+            .padding(.vertical, 6)
             
-            // Translation preview
-            if !translatedText.isEmpty {
-                Text(translatedText)
-                    .font(.subheadline)
-                    .foregroundColor(.primary)
-                    .lineLimit(1)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                
-                // Insert translation button
-                Button(action: onTranslate) {
-                    Image(systemName: "arrow.up.circle.fill")
-                        .font(.title2)
-                        .foregroundColor(.blue)
-                }
-            } else {
-                Text("Translation will appear here...")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+            // Learning mode: Word breakdown
+            if settings.learningMode != .off && settings.showWordBreakdown && !wordBreakdown.isEmpty && !showClipboardTranslation {
+                wordBreakdownBar
             }
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 6)
         .background(Color(.systemBackground).opacity(0.95))
+    }
+    
+    // Outgoing translation (you typing to her)
+    private var outgoingTranslationView: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                // Show original if learning mode
+                if settings.learningMode != .off && settings.showOriginalText {
+                    Text(currentText)
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                }
+                
+                HStack(spacing: 4) {
+                    Text(translatedText)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(.primary)
+                        .lineLimit(1)
+                    
+                    // Pronunciation hint
+                    if settings.showPronunciation, let pronunciation = getPronunciationHint() {
+                        Text("(\(pronunciation))")
+                            .font(.caption2)
+                            .foregroundColor(.blue)
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .onTapGesture {
+                showLearningDetail.toggle()
+            }
+            
+            // Save to learn button
+            if settings.learningMode == .immersive {
+                Button(action: { onSaveToLearn?() }) {
+                    Image(systemName: "bookmark")
+                        .font(.body)
+                        .foregroundColor(.orange)
+                }
+            }
+            
+            // Insert translation button
+            Button(action: onTranslate) {
+                Image(systemName: "arrow.up.circle.fill")
+                    .font(.title2)
+                    .foregroundColor(.blue)
+            }
+        }
+    }
+    
+    // Reverse translation (reading her messages)
+    private var reverseTranslationView: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Paste French text to translate")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+                
+                if !clipboardTranslation.isEmpty {
+                    Text(clipboardTranslation)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(.primary)
+                        .lineLimit(2)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            
+            // Paste & translate button
+            Button(action: { onReverseTranslate?() }) {
+                HStack(spacing: 4) {
+                    Image(systemName: "doc.on.clipboard")
+                    Text("Paste")
+                        .font(.caption)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(Color.purple)
+                .foregroundColor(.white)
+                .cornerRadius(8)
+            }
+        }
+    }
+    
+    // Word-by-word breakdown for learning
+    private var wordBreakdownBar: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(wordBreakdown.indices, id: \.self) { index in
+                    let pair = wordBreakdown[index]
+                    VStack(spacing: 2) {
+                        Text(pair.translated)
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundColor(.blue)
+                        
+                        if let pronunciation = pair.pronunciation {
+                            Text(pronunciation)
+                                .font(.system(size: 8))
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        Text(pair.original)
+                            .font(.system(size: 9))
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 4)
+                    .background(Color.blue.opacity(0.1))
+                    .cornerRadius(6)
+                }
+            }
+            .padding(.horizontal, 8)
+        }
+        .frame(height: 50)
+        .background(Color(.systemGray6).opacity(0.5))
+    }
+    
+    private func getPronunciationHint() -> String? {
+        // Simple pronunciation hint for the whole phrase
+        guard settings.targetLanguage.code == "fr" else { return nil }
+        
+        // This would come from the translation service in production
+        return nil
     }
     
     // MARK: - Letter Keyboard
@@ -303,8 +450,10 @@ struct KeyboardView_Previews: PreviewProvider {
             onReturn: {},
             onNextKeyboard: {},
             hasFullAccess: true,
-            currentText: .constant("")
+            currentText: .constant("Hello"),
+            onReverseTranslate: {},
+            onSaveToLearn: {}
         )
-        .frame(height: 300)
+        .frame(height: 350)
     }
 }

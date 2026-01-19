@@ -1,13 +1,32 @@
 # TranslateKeyboard
 
-An iOS keyboard extension that automatically translates your text as you type. Type in one language, send in another!
+An iOS keyboard extension that automatically translates your text as you type AND helps you learn the language. Perfect for chatting with someone who speaks a different language!
+
+## The Use Case
+
+Imagine you're chatting with someone who speaks French:
+- **When you type**: Write in English, see the French translation, learn word-by-word
+- **When they reply**: Copy their French message, paste to see English translation
+- **Always learning**: Every exchange is saved for review with pronunciation hints
 
 ## Features
 
+### Translation
 - **Auto-Translation**: Automatically translates text as you type
 - **40+ Languages**: Support for over 40 languages including English, Spanish, French, German, Chinese, Japanese, Korean, and more
 - **Translation Preview**: See translations in real-time above the keyboard
+- **Reverse Translation**: Paste incoming messages to understand what they said
 - **Multiple Translation Providers**: Choose between Apple Translate, Google Translate, or DeepL
+
+### Learning Mode
+- **Word-by-Word Breakdown**: See each word translated with its meaning
+- **Pronunciation Hints**: Learn how to pronounce French (and other languages)
+- **Conversation History**: Track your exchanges with timestamps
+- **Vocabulary Building**: All translated phrases saved for review
+- **Spaced Repetition**: Flashcard review system to reinforce learning
+- **Progress Tracking**: See your mastery level for each word
+
+### Design
 - **Beautiful UI**: Modern, native iOS keyboard design with smooth animations
 - **Customizable**: Configure source/target languages, keyboard appearance, and more
 - **Privacy-Focused**: Uses on-device translation when available (Apple Translate)
@@ -58,14 +77,17 @@ TranslateKeyboard/
 ├── TranslateKeyboard/                 # Main iOS App
 │   ├── TranslateKeyboardApp.swift     # App entry point
 │   ├── Views/
-│   │   ├── ContentView.swift          # Main app view
+│   │   ├── ContentView.swift          # Main app view with tabs
+│   │   ├── LearnView.swift            # Learning/review interface
 │   │   ├── SettingsView.swift         # Settings configuration
 │   │   └── LanguagePickerView.swift   # Language selection
 │   ├── Models/
 │   │   ├── Language.swift             # Language model (40+ languages)
+│   │   ├── LearningCard.swift         # Flashcard/vocabulary model
 │   │   └── TranslationSettings.swift  # App settings with App Group sync
 │   ├── Services/
-│   │   └── TranslationService.swift   # Translation API integration
+│   │   ├── TranslationService.swift   # Translation API integration
+│   │   └── LearningService.swift      # Learning/review logic
 │   └── Resources/
 │       └── Assets.xcassets            # App icons and colors
 │
@@ -109,12 +131,26 @@ The app supports multiple translation providers:
 
 ## Usage
 
-### Basic Translation
+### Chatting Scenario (e.g., English ↔ French)
 
-1. Switch to the TranslateKeyboard using the globe icon
-2. Type your text in your source language
-3. The translation appears in the preview bar above the keyboard
-4. Tap the blue arrow button to replace your text with the translation
+#### When You Want to Send a Message:
+1. Switch to TranslateKeyboard using the globe icon
+2. Type your message in English: "How was your day?"
+3. See the French translation appear: "Comment était ta journée?"
+4. See word-by-word breakdown with pronunciation
+5. Tap the blue arrow to send the French version
+
+#### When You Receive Their Reply:
+1. Copy their French message from the chat
+2. In the keyboard, tap the language toggle (🇺🇸 → 🇫🇷 becomes 🇫🇷 → 🇺🇸)
+3. Tap "Paste" to translate their French message to English
+4. The phrase is saved to your learning history
+
+#### Review What You've Learned:
+1. Open the TranslateKeyboard app
+2. Go to the "Learn" tab
+3. See conversation history, vocabulary list, and flashcards
+4. Review with spaced repetition to build long-term memory
 
 ### Changing Languages
 
@@ -123,13 +159,22 @@ The app supports multiple translation providers:
 3. Select your desired language from the list
 4. Changes sync automatically to the keyboard
 
+### Learning Modes
+
+- **Off**: Just translation, no learning features
+- **Subtle**: Translation with minimal interruption
+- **Learning**: Word breakdown + pronunciation hints
+- **Immersive**: Full learning with save prompts and review reminders
+
 ### Keyboard Features
 
 - **Shift**: Single tap for one capital letter, double tap for caps lock
 - **Delete**: Tap to delete one character, hold to delete multiple
 - **123**: Switch to numbers and symbols
 - **Globe**: Switch to next keyboard
+- **Language Toggle**: Switch between outgoing/incoming translation
 - **Translate**: Replace typed text with translation
+- **Bookmark**: Save phrase to learning history (in Immersive mode)
 
 ## Supported Languages
 
@@ -161,16 +206,31 @@ The app supports multiple translation providers:
 ### Key Components
 
 - **TranslationService**: Handles all translation logic with caching and rate limiting
+- **LearningService**: Manages word breakdown, pronunciation, and spaced repetition
 - **TranslationSettings**: Manages settings with App Group for extension sync
 - **KeyboardViewController**: UIInputViewController for the keyboard extension
-- **KeyboardView**: SwiftUI-based keyboard UI
+- **KeyboardView**: SwiftUI-based keyboard UI with learning features
 
 ### Data Flow
 
+#### Outgoing Translation (You → Them)
 1. User types on keyboard → `KeyboardViewController` captures input
 2. Text is buffered and sent to `TranslationService`
-3. Translation result is displayed in `TranslationBar`
+3. Translation result + word breakdown displayed in `TranslationBar`
 4. User taps insert → original text replaced with translation
+5. (Learning Mode) Exchange saved to history with `LearningCard`
+
+#### Incoming Translation (Them → You)
+1. User copies their message and taps language toggle
+2. Clipboard content sent to `TranslationService` (reverse direction)
+3. Translation displayed for understanding
+4. Exchange saved with learning context
+
+#### Learning Flow
+1. All translations create `LearningCard` objects
+2. Cards tracked with confidence levels (new → mastered)
+3. Spaced repetition algorithm determines review schedule
+4. Flashcard review updates confidence based on recall
 
 ## Contributing
 
@@ -203,13 +263,19 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Roadmap
 
+- [x] Word-by-word breakdown
+- [x] Pronunciation hints
+- [x] Conversation history
+- [x] Spaced repetition flashcards
+- [x] Reverse translation (clipboard)
 - [ ] Voice input support
 - [ ] Swipe typing
 - [ ] Custom keyboard themes
-- [ ] Translation history
-- [ ] Favorite phrases
+- [ ] Audio pronunciation playback
+- [ ] Grammar explanations
 - [ ] Widget for quick translations
 - [ ] macOS Catalyst support
+- [ ] Apple Watch companion
 
 ---
 

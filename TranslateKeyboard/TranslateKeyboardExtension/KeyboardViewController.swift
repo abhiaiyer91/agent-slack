@@ -7,11 +7,13 @@ class KeyboardViewController: UIInputViewController {
     private var hostingController: UIHostingController<KeyboardView>?
     private let settings = TranslationSettings.shared
     private let translationService = TranslationService.shared
+    private let learningService = LearningService.shared
     
     // Text buffer for translation
     private var textBuffer = ""
     private var translationTask: Task<Void, Never>?
     private var lastTranslatedText = ""
+    private var lastTranslationResult: TranslationResult?
     
     // MARK: - Lifecycle
     override func viewDidLoad() {
@@ -51,7 +53,13 @@ class KeyboardViewController: UIInputViewController {
                 self?.advanceToNextInputMode()
             },
             hasFullAccess: hasFullAccess,
-            currentText: $textBuffer
+            currentText: $textBuffer,
+            onReverseTranslate: { [weak self] in
+                self?.reverseTranslateClipboard()
+            },
+            onSaveToLearn: { [weak self] in
+                self?.saveCurrentToLearning()
+            }
         )
         
         let hostingController = UIHostingController(rootView: keyboardView)
@@ -73,7 +81,10 @@ class KeyboardViewController: UIInputViewController {
     }
     
     private func updateKeyboardHeight() {
-        let height: CGFloat = settings.showTranslationPreview ? 300 : 260
+        // Taller keyboard when learning mode is on to show word breakdown
+        let baseHeight: CGFloat = settings.showTranslationPreview ? 300 : 260
+        let learningBonus: CGFloat = (settings.learningMode != .off && settings.showWordBreakdown) ? 50 : 0
+        let height: CGFloat = baseHeight + learningBonus
         
         let heightConstraint = view.constraints.first { $0.firstAttribute == .height }
         heightConstraint?.constant = height
@@ -160,10 +171,23 @@ class KeyboardViewController: UIInputViewController {
             )
             
             lastTranslatedText = textToTranslate
+            lastTranslationResult = result
+            
+            // Create word breakdown if learning mode is on
+            var wordBreakdown: [(original: String, translated: String, pronunciation: String?)] = []
+            if settings.learningMode != .off && settings.showWordBreakdown {
+                let breakdown = learningService.createWordBreakdown(
+                    original: textToTranslate,
+                    translated: result.translatedText,
+                    sourceLanguage: settings.sourceLanguage,
+                    targetLanguage: settings.targetLanguage
+                )
+                wordBreakdown = breakdown.map { ($0.original, $0.translated, $0.pronunciation) }
+            }
             
             // Update the translation preview
             await MainActor.run {
-                updateTranslationPreview(result.translatedText)
+                updateTranslationPreview(result.translatedText, wordBreakdown: wordBreakdown)
             }
         } catch {
             print("Translation error: \(error)")
@@ -201,14 +225,100 @@ class KeyboardViewController: UIInputViewController {
         }
     }
     
-    private func updateTranslationPreview(_ translation: String) {
+    private func updateTranslationPreview(_ translation: String, wordBreakdown: [(original: String, translated: String, pronunciation: String?)] = []) {
         // This would update the preview bar in the keyboard
         // For now, we store it for the SwiftUI view to display
+        var userInfo: [String: Any] = ["translation": translation]
+        if !wordBreakdown.isEmpty {
+            userInfo["wordBreakdown"] = wordBreakdown
+        }
         NotificationCenter.default.post(
             name: .translationUpdated,
             object: nil,
-            userInfo: ["translation": translation]
+            userInfo: userInfo
         )
+    }
+    
+    // MARK: - Reverse Translation (for reading incoming messages)
+    private func reverseTranslateClipboard() {
+        guard hasFullAccess else { return }
+        
+        // Get text from clipboard
+        guard let clipboardText = UIPasteboard.general.string,
+              !clipboardText.isEmpty else { return }
+        
+        Task { [weak self] in
+            guard let self = self else { return }
+            
+            do {
+                // Translate FROM target language TO source language (reverse)
+                let result = try await self.translationService.translate(
+                    text: clipboardText,
+                    from: self.settings.targetLanguage,  // French (what she wrote)
+                    to: self.settings.sourceLanguage      // English (so you understand)
+                )
+                
+                await MainActor.run {
+                    // Post notification for clipboard translation
+                    NotificationCenter.default.post(
+                        name: .clipboardTranslationUpdated,
+                        object: nil,
+                        userInfo: ["translation": result.translatedText, "original": clipboardText]
+                    )
+                    
+                    // Save to learning history (learning French from what she says)
+                    if self.settings.learningMode != .off {
+                        let card = self.learningService.createLearningCard(
+                            from: result.translatedText,  // English meaning
+                            translated: clipboardText,     // French (what to learn)
+                            sourceLanguage: self.settings.sourceLanguage,
+                            targetLanguage: self.settings.targetLanguage
+                        )
+                        self.settings.addToLearningHistory(card)
+                        
+                        // Add to conversation history
+                        let exchange = ConversationExchange(
+                            direction: .incoming,
+                            originalText: clipboardText,
+                            translatedText: result.translatedText,
+                            learningCard: card
+                        )
+                        self.settings.addConversationExchange(exchange)
+                    }
+                }
+            } catch {
+                print("Reverse translation error: \(error)")
+            }
+        }
+    }
+    
+    // MARK: - Save to Learning
+    private func saveCurrentToLearning() {
+        guard let result = lastTranslationResult else { return }
+        
+        let card = learningService.createLearningCard(
+            from: result.originalText,
+            translated: result.translatedText,
+            sourceLanguage: settings.sourceLanguage,
+            targetLanguage: settings.targetLanguage
+        )
+        
+        settings.addToLearningHistory(card)
+        
+        // Add to conversation history
+        let exchange = ConversationExchange(
+            direction: .outgoing,
+            originalText: result.originalText,
+            translatedText: result.translatedText,
+            learningCard: card
+        )
+        settings.addConversationExchange(exchange)
+        
+        // Haptic feedback to confirm save
+        if settings.hapticFeedbackEnabled {
+            let generator = UINotificationFeedbackGenerator()
+            generator.notificationOccurred(.success)
+        }
     }
     
     // MARK: - Haptic Feedback
@@ -230,4 +340,5 @@ class KeyboardViewController: UIInputViewController {
 // MARK: - Notification Names
 extension Notification.Name {
     static let translationUpdated = Notification.Name("translationUpdated")
+    static let clipboardTranslationUpdated = Notification.Name("clipboardTranslationUpdated")
 }

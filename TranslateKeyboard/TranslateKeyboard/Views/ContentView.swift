@@ -2,6 +2,34 @@ import SwiftUI
 
 struct ContentView: View {
     @StateObject private var settings = TranslationSettings.shared
+    @State private var selectedTab = 0
+    
+    var body: some View {
+        TabView(selection: $selectedTab) {
+            HomeView()
+                .tabItem {
+                    Label("Home", systemImage: "keyboard")
+                }
+                .tag(0)
+            
+            LearnView()
+                .tabItem {
+                    Label("Learn", systemImage: "book.fill")
+                }
+                .tag(1)
+            
+            SettingsView()
+                .tabItem {
+                    Label("Settings", systemImage: "gearshape.fill")
+                }
+                .tag(2)
+        }
+    }
+}
+
+// MARK: - Home View (Setup & Languages)
+struct HomeView: View {
+    @StateObject private var settings = TranslationSettings.shared
     @State private var showingLanguagePicker = false
     @State private var isSelectingSource = true
     
@@ -12,14 +40,17 @@ struct ContentView: View {
                     // Header
                     headerSection
                     
+                    // Learning Mode Quick Toggle
+                    learningModeCard
+                    
                     // Setup Instructions
                     setupInstructionsCard
                     
                     // Language Settings
                     languageSettingsCard
                     
-                    // Translation Mode
-                    translationModeCard
+                    // How It Works for Your Use Case
+                    useCaseExplanationCard
                     
                     // Quick Test
                     quickTestSection
@@ -40,25 +71,59 @@ struct ContentView: View {
     // MARK: - Header Section
     private var headerSection: some View {
         VStack(spacing: 12) {
-            Image(systemName: "keyboard.fill")
-                .font(.system(size: 60))
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [.blue, .purple],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
+            HStack(spacing: 8) {
+                Text(settings.sourceLanguage.flag)
+                    .font(.system(size: 40))
+                
+                Image(systemName: "arrow.left.arrow.right")
+                    .font(.title2)
+                    .foregroundColor(.blue)
+                
+                Text(settings.targetLanguage.flag)
+                    .font(.system(size: 40))
+            }
             
-            Text("Auto-Translate Keyboard")
+            Text("Learn \(settings.targetLanguage.name) While Chatting")
                 .font(.title2)
                 .fontWeight(.bold)
             
-            Text("Type in one language, send in another")
+            Text("Type, translate, and learn simultaneously")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
         }
         .padding(.vertical)
+    }
+    
+    // MARK: - Learning Mode Card
+    private var learningModeCard: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Label("Learning Mode", systemImage: "graduationcap.fill")
+                .font(.headline)
+                .foregroundColor(.primary)
+            
+            Picker("Mode", selection: $settings.learningMode) {
+                ForEach(LearningMode.allCases, id: \.self) { mode in
+                    Text(mode.displayName).tag(mode)
+                }
+            }
+            .pickerStyle(.segmented)
+            
+            Text(settings.learningMode.description)
+                .font(.caption)
+                .foregroundColor(.secondary)
+            
+            if settings.learningMode != .off {
+                Toggle("Show Pronunciation", isOn: $settings.showPronunciation)
+                    .font(.subheadline)
+                
+                Toggle("Show Word Breakdown", isOn: $settings.showWordBreakdown)
+                    .font(.subheadline)
+            }
+        }
+        .padding()
+        .background(Color(.systemBackground))
+        .cornerRadius(16)
+        .shadow(color: .black.opacity(0.05), radius: 10, x: 0, y: 5)
     }
     
     // MARK: - Setup Instructions
@@ -139,6 +204,44 @@ struct ContentView: View {
         .shadow(color: .black.opacity(0.05), radius: 10, x: 0, y: 5)
     }
     
+    // MARK: - Use Case Explanation
+    private var useCaseExplanationCard: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Label("How to Use", systemImage: "lightbulb.fill")
+                .font(.headline)
+                .foregroundColor(.orange)
+            
+            VStack(alignment: .leading, spacing: 12) {
+                UseCaseRow(
+                    emoji: "✍️",
+                    title: "When You're Typing",
+                    description: "Type in \(settings.sourceLanguage.name), see the \(settings.targetLanguage.name) translation above the keyboard. Tap the blue arrow to send the translation."
+                )
+                
+                UseCaseRow(
+                    emoji: "📖",
+                    title: "Learn While Typing",
+                    description: "See word-by-word breakdown with pronunciation hints. Each word you type helps you learn!"
+                )
+                
+                UseCaseRow(
+                    emoji: "📋",
+                    title: "When They Reply",
+                    description: "Copy their \(settings.targetLanguage.name) message, tap the language toggle in the keyboard, then paste to see the \(settings.sourceLanguage.name) translation."
+                )
+                
+                UseCaseRow(
+                    emoji: "📚",
+                    title: "Review Later",
+                    description: "All your translations are saved. Review them in the Learn tab to reinforce what you've learned!"
+                )
+            }
+        }
+        .padding()
+        .background(Color.orange.opacity(0.1))
+        .cornerRadius(16)
+    }
+    
     // MARK: - Translation Mode
     private var translationModeCard: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -172,6 +275,30 @@ struct ContentView: View {
         .background(Color(.systemBackground))
         .cornerRadius(16)
         .shadow(color: .black.opacity(0.05), radius: 10, x: 0, y: 5)
+    }
+    
+    // MARK: - Use Case Row
+    struct UseCaseRow: View {
+        let emoji: String
+        let title: String
+        let description: String
+        
+        var body: some View {
+            HStack(alignment: .top, spacing: 12) {
+                Text(emoji)
+                    .font(.title2)
+                
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    
+                    Text(description)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+        }
     }
     
     // MARK: - Quick Test
