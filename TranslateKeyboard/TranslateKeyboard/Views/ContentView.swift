@@ -162,9 +162,21 @@ struct HomeView: View {
     // MARK: - Language Settings
     private var languageSettingsCard: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Label("Language Settings", systemImage: "globe")
-                .font(.headline)
-                .foregroundColor(.primary)
+            HStack {
+                Label("Language Settings", systemImage: "globe")
+                    .font(.headline)
+                    .foregroundColor(.primary)
+                
+                Spacer()
+                
+                // Apple Translation status badge
+                if #available(iOS 17.4, *) {
+                    TranslationStatusBadge(
+                        sourceLanguage: settings.sourceLanguage,
+                        targetLanguage: settings.targetLanguage
+                    )
+                }
+            }
             
             HStack(spacing: 12) {
                 // Source Language
@@ -196,6 +208,11 @@ struct HomeView: View {
                     isSelectingSource = false
                     showingLanguagePicker = true
                 }
+            }
+            
+            // Language download view (iOS 17.4+)
+            if #available(iOS 17.4, *) {
+                LanguageDownloadView()
             }
         }
         .padding()
