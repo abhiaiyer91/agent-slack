@@ -10,7 +10,7 @@
 
 // Core
 export { mastra } from "./mastra/index.js";
-export { jarvisAgent } from "./mastra/agents/jarvis.js";
+export { jarvisAgent, initJarvis } from "./mastra/agents/jarvis.js";
 export { createModelConfig, createFastModel, createVisionModel } from "./mastra/models.js";
 
 // Tools

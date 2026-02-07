@@ -163,6 +163,8 @@ const messagesEl = document.getElementById("messages");
 const inputEl = document.getElementById("input");
 const sendBtn = document.getElementById("send");
 let busy = false;
+const threadId = "thread-" + crypto.randomUUID();
+const chatHistory = [];
 
 // Auto-resize textarea
 inputEl.addEventListener("input", () => {
@@ -219,6 +221,7 @@ async function send() {
   inputEl.style.height = "auto";
 
   addMessage("user", text);
+  chatHistory.push({ role: "user", content: text });
 
   // Add assistant message with typing indicator
   const assistantDiv = addMessage("assistant", '<div class="typing"><span></span><span></span><span></span></div>');
@@ -230,7 +233,7 @@ async function send() {
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages: [{ role: "user", content: text }] }),
+      body: JSON.stringify({ messages: chatHistory, threadId }),
     });
 
     const reader = res.body.getReader();

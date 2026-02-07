@@ -1,8 +1,9 @@
 /**
  * Daily Briefing Workflow
  *
- * Parallel weather + schedule + news gathering, then compile into briefing.
- * Uses Mastra's graph-based workflow engine.
+ * Parallel weather + schedule + news gathering, then compile.
+ * Weather step calls wttr.in (free, no API key).
+ * News step calls Hacker News API (free, no API key).
  */
 
 import { createWorkflow, createStep } from "@mastra/core/workflows";
@@ -46,46 +47,101 @@ const briefingOutputSchema = z.object({
   sections: z.number(),
 });
 
-// Step 1: Weather
+// Step 1: Weather — calls wttr.in (free, no key)
 const gatherWeatherStep = createStep({
   id: "gather-weather",
-  description: "Fetch current weather for the user's location",
+  description: "Fetch current weather from wttr.in",
   inputSchema: workflowInputSchema,
   outputSchema: weatherOutputSchema,
   execute: async ({ inputData }) => {
-    return {
-      weather: `Weather for ${inputData.location}: Conditions data pending.`,
-      temperature: "N/A",
-      conditions: "Connect weather API in daily-briefing.ts",
-    };
+    try {
+      const encoded = encodeURIComponent(inputData.location);
+      const res = await fetch(`https://wttr.in/${encoded}?format=j1`, {
+        headers: { "User-Agent": "Jarvis/1.0" },
+        signal: AbortSignal.timeout(5000),
+      });
+
+      if (!res.ok) throw new Error(`wttr.in returned ${res.status}`);
+
+      const data = await res.json() as any;
+      const current = data.current_condition?.[0] || {};
+      const tempC = current.temp_C || "?";
+      const tempF = current.temp_F || "?";
+      const desc = current.weatherDesc?.[0]?.value || "Unknown";
+      const humidity = current.humidity || "?";
+      const windMph = current.windspeedMiles || "?";
+
+      return {
+        weather: `${inputData.location}: ${desc}, ${tempC}C / ${tempF}F, humidity ${humidity}%, wind ${windMph} mph`,
+        temperature: `${tempC}C / ${tempF}F`,
+        conditions: desc,
+      };
+    } catch (err) {
+      return {
+        weather: `Weather for ${inputData.location}: unavailable (${err instanceof Error ? err.message : "error"})`,
+        temperature: "N/A",
+        conditions: "unavailable",
+      };
+    }
   },
 });
 
-// Step 2: Schedule
+// Step 2: Schedule — placeholder (needs calendar integration)
 const checkScheduleStep = createStep({
   id: "check-schedule",
-  description: "Check today's calendar and upcoming events",
+  description: "Check today's calendar",
   inputSchema: workflowInputSchema,
   outputSchema: scheduleOutputSchema,
   execute: async () => {
     return {
       events: [],
-      summary: "Calendar integration pending. Connect via MCP or direct API.",
+      summary: "No calendar connected. Add Google Calendar or Outlook via MCP to see events.",
     };
   },
 });
 
-// Step 3: News
+// Step 3: News — calls Hacker News API (free, no key)
 const scanNewsStep = createStep({
   id: "scan-news",
-  description: "Scan top news headlines",
+  description: "Fetch top stories from Hacker News",
   inputSchema: workflowInputSchema,
   outputSchema: newsOutputSchema,
   execute: async () => {
-    return {
-      headlines: [],
-      summary: "News integration pending. Connect a news source.",
-    };
+    try {
+      const res = await fetch("https://hacker-news.firebaseio.com/v0/topstories.json", {
+        signal: AbortSignal.timeout(5000),
+      });
+      if (!res.ok) throw new Error(`HN API returned ${res.status}`);
+
+      const ids = (await res.json() as number[]).slice(0, 5);
+
+      const stories = await Promise.all(
+        ids.map(async (id) => {
+          const storyRes = await fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`, {
+            signal: AbortSignal.timeout(3000),
+          });
+          return storyRes.json() as Promise<any>;
+        })
+      );
+
+      const headlines = stories
+        .filter((s) => s && s.title)
+        .map((s) => ({
+          title: s.title,
+          source: "Hacker News",
+          url: s.url || `https://news.ycombinator.com/item?id=${s.id}`,
+        }));
+
+      return {
+        headlines,
+        summary: `Top ${headlines.length} stories from Hacker News`,
+      };
+    } catch (err) {
+      return {
+        headlines: [],
+        summary: `News unavailable: ${err instanceof Error ? err.message : "error"}`,
+      };
+    }
   },
 });
 
@@ -107,7 +163,7 @@ const compileBriefingStep = createStep({
     const sections = [
       `## Weather\n${weather.weather}`,
       `## Schedule\n${schedule.summary}${schedule.events.length > 0 ? "\n" + schedule.events.map((e) => `- ${e.time}: ${e.title}`).join("\n") : ""}`,
-      `## News\n${news.summary}${news.headlines.length > 0 ? "\n" + news.headlines.map((h) => `- ${h.title} (${h.source})`).join("\n") : ""}`,
+      `## News\n${news.summary}${news.headlines.length > 0 ? "\n" + news.headlines.map((h) => `- [${h.title}](${h.url})`).join("\n") : ""}`,
     ];
 
     return {
@@ -120,7 +176,7 @@ const compileBriefingStep = createStep({
 // Workflow
 export const dailyBriefingWorkflow = createWorkflow({
   id: "daily-briefing",
-  description: "Generate a comprehensive daily briefing with weather, schedule, and news",
+  description: "Generate a daily briefing with live weather and news",
   inputSchema: workflowInputSchema,
   outputSchema: briefingOutputSchema,
 })

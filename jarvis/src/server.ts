@@ -8,7 +8,7 @@
  *
  * Endpoints:
  *   GET  /                — Chat UI
- *   POST /api/chat        — Streaming chat (SSE)
+ *   POST /api/chat        — Streaming chat (SSE) with conversation memory
  *   GET  /api/health      — Health check
  */
 
@@ -17,6 +17,7 @@ import { streamSSE } from "hono/streaming";
 import { cors } from "hono/cors";
 import { serve } from "@hono/node-server";
 import { mastra } from "./mastra/index.js";
+import { initJarvis } from "./mastra/agents/jarvis.js";
 import { renderCanvas } from "./canvas/renderer.js";
 import { chatUI } from "./ui.js";
 
@@ -44,11 +45,13 @@ app.get("/api/health", (c) => {
 });
 
 // ---------------------------------------------------------------------------
-// POST /api/chat — Streaming chat
+// POST /api/chat — Streaming chat with memory
 // ---------------------------------------------------------------------------
 app.post("/api/chat", async (c) => {
   const body = await c.req.json();
   const messages: Array<{ role: string; content: string }> = body.messages || [];
+  const threadId: string = body.threadId || "default";
+  const resourceId: string = body.resourceId || "user";
   const lastMessage = messages[messages.length - 1];
 
   if (!lastMessage?.content) {
@@ -57,13 +60,19 @@ app.post("/api/chat", async (c) => {
 
   const agent = mastra.getAgent("jarvis");
 
-  // Stream response via SSE
   return streamSSE(c, async (stream) => {
     try {
-      const result = await agent.stream(lastMessage.content);
+      // Use Mastra's memory-aware stream with thread + resource.
+      // Memory automatically loads history, appends the new message,
+      // sends full context to the LLM, and saves the response.
+      const result = await agent.stream(lastMessage.content, {
+        memory: {
+          thread: { id: threadId },
+          resource: resourceId,
+        },
+      });
 
       let fullText = "";
-      const toolCalls: Array<{ name: string; args: any; result: any }> = [];
 
       for await (const chunk of result.textStream) {
         fullText += chunk;
@@ -73,18 +82,18 @@ app.post("/api/chat", async (c) => {
         });
       }
 
-      // Check for tool calls in the final result
+      // Collect tool results after stream completes
       const finalResult = await result;
-      if (finalResult.toolResults && Array.isArray(finalResult.toolResults)) {
-        for (const tr of finalResult.toolResults) {
+      const toolResults = (finalResult as any).toolResults;
+      if (toolResults && Array.isArray(toolResults)) {
+        for (const tr of toolResults) {
           const toolCall = {
             name: tr.toolName || "unknown",
             args: tr.args || {},
             result: tr.result || null,
           };
-          toolCalls.push(toolCall);
 
-          // If it's a canvas tool call, render the HTML
+          // Canvas rendering
           if (toolCall.name === "canvasTool" && toolCall.result?.rendered) {
             try {
               const canvasHtml = renderCanvas({
@@ -115,7 +124,7 @@ app.post("/api/chat", async (c) => {
         event: "done",
         data: JSON.stringify({
           text: fullText,
-          toolCalls: toolCalls.length,
+          threadId,
         }),
       });
     } catch (err) {
@@ -129,17 +138,27 @@ app.post("/api/chat", async (c) => {
 });
 
 // ---------------------------------------------------------------------------
-// Start
+// Start — async init then listen
 // ---------------------------------------------------------------------------
 const PORT = parseInt(process.env.PORT || "3033", 10);
 
-serve({ fetch: app.fetch, port: PORT }, () => {
-  console.log();
-  console.log("  ┌─────────────────────────────────────────┐");
-  console.log("  │                                         │");
-  console.log("  │   J.A.R.V.I.S. Online                   │");
-  console.log(`  │   http://localhost:${PORT}                  │`);
-  console.log("  │                                         │");
-  console.log("  └─────────────────────────────────────────┘");
-  console.log();
+async function start() {
+  // Initialize MCP tools, memory, etc.
+  await initJarvis();
+
+  serve({ fetch: app.fetch, port: PORT }, () => {
+    console.log();
+    console.log("  ┌─────────────────────────────────────────┐");
+    console.log("  │                                         │");
+    console.log("  │   J.A.R.V.I.S. Online                   │");
+    console.log(`  │   http://localhost:${PORT}                  │`);
+    console.log("  │                                         │");
+    console.log("  └─────────────────────────────────────────┘");
+    console.log();
+  });
+}
+
+start().catch((err) => {
+  console.error("[Jarvis] Fatal startup error:", err);
+  process.exit(1);
 });
