@@ -1,29 +1,18 @@
 /**
  * Daily Briefing Workflow
  *
- * A multi-step workflow that gathers information from multiple sources
- * and compiles a morning briefing for the user.
- *
- * Mastra workflows use a graph-based execution engine with intuitive
- * control flow: .then(), .branch(), .parallel(). This is far cleaner
- * than OpenClaw's cron-based approach.
- *
- * Steps:
- *   1. Gather weather data
- *   2. Check calendar/schedule (placeholder)
- *   3. Scan news headlines
- *   4. Compile into briefing
+ * Parallel weather + schedule + news gathering, then compile into briefing.
+ * Uses Mastra's graph-based workflow engine.
  */
 
 import { createWorkflow, createStep } from "@mastra/core/workflows";
 import { z } from "zod";
 
-// Shared input schema — all parallel steps receive the workflow input
+// Schemas
 const workflowInputSchema = z.object({
-  location: z.string().default("New York, NY"),
+  location: z.string().describe("Location for weather lookup"),
 });
 
-// Shared output schemas — reused for both output and compile input
 const eventSchema = z.object({
   time: z.string(),
   title: z.string(),
@@ -52,9 +41,12 @@ const newsOutputSchema = z.object({
   summary: z.string(),
 });
 
-// ---------------------------------------------------------------------------
-// Step 1: Gather weather
-// ---------------------------------------------------------------------------
+const briefingOutputSchema = z.object({
+  briefing: z.string(),
+  sections: z.number(),
+});
+
+// Step 1: Weather
 const gatherWeatherStep = createStep({
   id: "gather-weather",
   description: "Fetch current weather for the user's location",
@@ -69,9 +61,7 @@ const gatherWeatherStep = createStep({
   },
 });
 
-// ---------------------------------------------------------------------------
-// Step 2: Check schedule
-// ---------------------------------------------------------------------------
+// Step 2: Schedule
 const checkScheduleStep = createStep({
   id: "check-schedule",
   description: "Check today's calendar and upcoming events",
@@ -85,37 +75,30 @@ const checkScheduleStep = createStep({
   },
 });
 
-// ---------------------------------------------------------------------------
-// Step 3: Scan news
-// ---------------------------------------------------------------------------
+// Step 3: News
 const scanNewsStep = createStep({
   id: "scan-news",
-  description: "Scan top news headlines relevant to the user",
+  description: "Scan top news headlines",
   inputSchema: workflowInputSchema,
   outputSchema: newsOutputSchema,
   execute: async () => {
     return {
       headlines: [],
-      summary: "News integration pending. Connect a news source in daily-briefing.ts.",
+      summary: "News integration pending. Connect a news source.",
     };
   },
 });
 
-// ---------------------------------------------------------------------------
-// Step 4: Compile briefing
-// ---------------------------------------------------------------------------
+// Step 4: Compile
 const compileBriefingStep = createStep({
   id: "compile-briefing",
-  description: "Compile all gathered data into a formatted briefing",
+  description: "Compile all data into a formatted briefing",
   inputSchema: z.object({
     "gather-weather": weatherOutputSchema,
     "check-schedule": scheduleOutputSchema,
     "scan-news": newsOutputSchema,
   }),
-  outputSchema: z.object({
-    briefing: z.string(),
-    sections: z.number(),
-  }),
+  outputSchema: briefingOutputSchema,
   execute: async ({ inputData }) => {
     const weather = inputData["gather-weather"];
     const schedule = inputData["check-schedule"];
@@ -134,17 +117,12 @@ const compileBriefingStep = createStep({
   },
 });
 
-// ---------------------------------------------------------------------------
-// Workflow: Assemble the pipeline
-// ---------------------------------------------------------------------------
+// Workflow
 export const dailyBriefingWorkflow = createWorkflow({
   id: "daily-briefing",
   description: "Generate a comprehensive daily briefing with weather, schedule, and news",
   inputSchema: workflowInputSchema,
-  outputSchema: z.object({
-    briefing: z.string(),
-    sections: z.number(),
-  }),
+  outputSchema: briefingOutputSchema,
 })
   .parallel([gatherWeatherStep, checkScheduleStep, scanNewsStep])
   .then(compileBriefingStep)

@@ -11,6 +11,7 @@ import { createModelConfig } from "../models.js";
 // Jarvis Agent — the core intelligence
 // ---------------------------------------------------------------------------
 export const jarvisAgent = new Agent({
+  id: "jarvis",
   name: "Jarvis",
   instructions: `You are JARVIS (Just A Rather Very Intelligent System), the ultimate AI assistant.
 
@@ -63,5 +64,4 @@ Use your working memory to track:
     dailyBriefingWorkflow,
     researchWorkflow,
   },
-
 });

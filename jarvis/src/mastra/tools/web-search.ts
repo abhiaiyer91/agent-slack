@@ -1,13 +1,15 @@
+/**
+ * Web search tool — performs a live web search via Tavily.
+ *
+ * Tavily is purpose-built for AI agent search: it returns clean, structured
+ * results with relevant snippets. Falls back gracefully if no TAVILY_API_KEY.
+ *
+ * Get a free API key at https://tavily.com
+ */
+
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 
-/**
- * Web search tool — performs a web search and returns summarized results.
- *
- * Uses the OpenAI web search grounding when available, or falls back to
- * a simple fetch-based approach. In production, plug in Tavily, Serper,
- * or Brave Search for better results.
- */
 export const webSearchTool = createTool({
   id: "web-search",
   description:
@@ -20,6 +22,10 @@ export const webSearchTool = createTool({
       .max(10)
       .default(5)
       .describe("Maximum number of results to return"),
+    searchDepth: z
+      .enum(["basic", "advanced"])
+      .default("basic")
+      .describe("Search depth: 'basic' is fast, 'advanced' is more thorough"),
   }),
   outputSchema: z.object({
     results: z.array(
@@ -30,23 +36,56 @@ export const webSearchTool = createTool({
       })
     ),
     query: z.string(),
+    answer: z.string().optional(),
   }),
-  execute: async ({ context }) => {
-    const { query, maxResults } = context;
+  execute: async ({ query, maxResults, searchDepth }) => {
+    if (!process.env.TAVILY_API_KEY) {
+      return {
+        query,
+        results: [
+          {
+            title: "Web search unavailable",
+            url: "https://tavily.com",
+            snippet:
+              "Set TAVILY_API_KEY in your .env to enable live web search. Get a free key at https://tavily.com",
+          },
+        ],
+      };
+    }
 
-    // Placeholder: In production, integrate with Tavily, Serper, or Brave Search API.
-    // For now, return a structured placeholder that makes the agent's behavior clear.
-    console.log(`[Jarvis] Web search: "${query}" (max ${maxResults} results)`);
+    try {
+      const { tavily } = await import("@tavily/core");
+      const client = tavily({ apiKey: process.env.TAVILY_API_KEY });
 
-    return {
-      query,
-      results: [
-        {
-          title: `Search results for: ${query}`,
-          url: `https://search.example.com/?q=${encodeURIComponent(query)}`,
-          snippet: `Web search integration pending. Query: "${query}". Connect a search provider (Tavily, Serper, Brave) in src/mastra/tools/web-search.ts to enable live results.`,
-        },
-      ],
-    };
+      const response = await client.search(query, {
+        maxResults: maxResults ?? 5,
+        searchDepth: searchDepth ?? "basic",
+        includeAnswer: true,
+      });
+
+      const results = (response.results || []).map((r) => ({
+        title: r.title || "Untitled",
+        url: r.url,
+        snippet: r.content || "",
+      }));
+
+      return {
+        query,
+        results,
+        answer: response.answer || undefined,
+      };
+    } catch (err) {
+      const error = err instanceof Error ? err.message : String(err);
+      return {
+        query,
+        results: [
+          {
+            title: "Search failed",
+            url: "",
+            snippet: `Web search error: ${error}`,
+          },
+        ],
+      };
+    }
   },
 });

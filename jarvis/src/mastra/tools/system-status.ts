@@ -1,13 +1,11 @@
+/**
+ * System status tool — reports on the host system's health and resource usage.
+ */
+
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import { cpus, totalmem, freemem, uptime, hostname, platform, arch } from "node:os";
 
-/**
- * System status tool — reports on the host system's health and resource usage.
- *
- * Gives Jarvis awareness of the environment it's running in, similar to how
- * the original Jarvis monitors Stark Tower's systems.
- */
 export const systemStatusTool = createTool({
   id: "system-status",
   description:
@@ -40,7 +38,7 @@ export const systemStatusTool = createTool({
       version: z.string(),
     }),
   }),
-  execute: async ({ context }) => {
+  execute: async () => {
     const uptimeSecs = uptime();
     const hours = Math.floor(uptimeSecs / 3600);
     const minutes = Math.floor((uptimeSecs % 3600) / 60);

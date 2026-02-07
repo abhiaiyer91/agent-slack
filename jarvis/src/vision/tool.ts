@@ -1,20 +1,14 @@
 /**
  * Vision tool for Jarvis.
  *
- * Gives Jarvis the ability to analyze images, screenshots, and visual media.
- * Uses the best available vision-capable model (Claude > GPT-4o > Gemini).
- *
- * OpenClaw's weakness: their vision pipeline is a tangled mess of provider
- * registries, capability loops, and base64 gymnastics. Mastra lets us use
- * the AI SDK's native multi-modal support — just pass image content parts
- * to a vision-capable model.
- *
- * The tool accepts image URLs or base64-encoded images and returns a
- * structured description that the agent can act on.
+ * Uses the AI SDK's native multi-modal support to analyze images
+ * via the best available vision-capable model (Claude > GPT-4o > Gemini).
  */
 
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
+import { generateText } from "ai";
+import { createVisionModel } from "../mastra/models.js";
 
 export const visionTool = createTool({
   id: "vision",
@@ -36,7 +30,7 @@ export const visionTool = createTool({
     prompt: z
       .string()
       .default("Describe this image in detail. Note any text, objects, people, colors, layout, and anything notable.")
-      .describe("Specific instruction for the analysis (e.g., 'read the text in this image')"),
+      .describe("Specific instruction for the analysis"),
   }),
   outputSchema: z.object({
     description: z.string(),
@@ -44,45 +38,56 @@ export const visionTool = createTool({
     dominantColors: z.array(z.string()).optional(),
     objects: z.array(z.string()).optional(),
   }),
-  execute: async ({ context }) => {
-    const { imageUrl, imageBase64, mimeType, prompt } = context;
-
+  execute: async ({ imageUrl, imageBase64, mimeType, prompt }) => {
     if (!imageUrl && !imageBase64) {
       return {
         description: "No image provided. Please supply either an imageUrl or imageBase64.",
         hasText: false,
+        dominantColors: [] as string[],
+        objects: [] as string[],
       };
     }
 
-    // In production, this tool would use the AI SDK's multi-modal generateText()
-    // to send the image to a vision-capable model. The Jarvis agent itself can
-    // also receive images directly in messages — this tool is for programmatic
-    // image analysis within workflows or when explicit analysis is requested.
-    //
-    // Implementation pattern:
-    //
-    //   const result = await generateText({
-    //     model: createVisionModel(),
-    //     messages: [{
-    //       role: "user",
-    //       content: [
-    //         { type: "text", text: prompt },
-    //         imageUrl
-    //           ? { type: "image", image: new URL(imageUrl) }
-    //           : { type: "image", image: Buffer.from(imageBase64!, "base64"), mimeType },
-    //       ],
-    //     }],
-    //   });
+    try {
+      const imagePart = imageUrl
+        ? { type: "image" as const, image: new URL(imageUrl) }
+        : { type: "image" as const, image: Buffer.from(imageBase64!, "base64"), mimeType: mimeType ?? "image/jpeg" };
 
-    const source = imageUrl || `base64 image (${mimeType})`;
-    console.log(`[Jarvis] Vision analysis: ${source}`);
-    console.log(`[Jarvis] Prompt: ${prompt}`);
+      const result = await generateText({
+        model: createVisionModel(),
+        messages: [
+          {
+            role: "user",
+            content: [
+              { type: "text", text: prompt ?? "Describe this image in detail." },
+              imagePart,
+            ],
+          },
+        ],
+        maxTokens: 1024,
+      });
 
-    return {
-      description: `Vision analysis pending. Source: ${source}. Connect a vision model (Claude, GPT-4o, Gemini) in src/vision/tool.ts to enable live analysis. Prompt: "${prompt}"`,
-      hasText: false,
-      dominantColors: [],
-      objects: [],
-    };
+      const text = result.text;
+      const hasText = /\b(text|word|letter|label|sign|caption|title|heading|number|digit)\b/i.test(text);
+      const colorMatches = text.match(/\b(red|blue|green|yellow|orange|purple|pink|black|white|gray|grey|brown|gold|silver|teal|navy|cyan|magenta)\b/gi);
+      const dominantColors: string[] = colorMatches
+        ? [...new Set(colorMatches.map((c: string) => c.toLowerCase()))]
+        : [];
+
+      return {
+        description: text,
+        hasText,
+        dominantColors,
+        objects: [],
+      };
+    } catch (err) {
+      const error = err instanceof Error ? err.message : String(err);
+      return {
+        description: `Vision analysis failed: ${error}. Ensure a vision-capable model API key is set.`,
+        hasText: false,
+        dominantColors: [],
+        objects: [],
+      };
+    }
   },
 });

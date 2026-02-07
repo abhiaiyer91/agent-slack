@@ -1,3 +1,10 @@
+/**
+ * File system tool — read, write, and list files within the Jarvis workspace.
+ *
+ * All operations are sandboxed to JARVIS_WORKSPACE (default: ./workspace).
+ * Path traversal is blocked.
+ */
+
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import { readFile, writeFile, readdir, mkdir, stat } from "node:fs/promises";
@@ -6,9 +13,6 @@ import { existsSync } from "node:fs";
 
 const WORKSPACE_ROOT = process.env.JARVIS_WORKSPACE || join(process.cwd(), "workspace");
 
-/**
- * Resolve a path safely within the workspace root, preventing traversal attacks.
- */
 function safePath(relativePath: string): string {
   const resolved = resolve(WORKSPACE_ROOT, relativePath);
   if (!resolved.startsWith(resolve(WORKSPACE_ROOT))) {
@@ -17,12 +21,6 @@ function safePath(relativePath: string): string {
   return resolved;
 }
 
-/**
- * File system tool — read, write, and list files within the Jarvis workspace.
- *
- * All operations are sandboxed to JARVIS_WORKSPACE (default: ./workspace).
- * Path traversal is blocked.
- */
 export const fileSystemTool = createTool({
   id: "file-system",
   description:
@@ -44,9 +42,7 @@ export const fileSystemTool = createTool({
     data: z.string().optional(),
     error: z.string().optional(),
   }),
-  execute: async ({ context }) => {
-    const { action, path: relativePath, content } = context;
-
+  execute: async ({ action, path: relativePath, content }) => {
     try {
       const fullPath = safePath(relativePath);
 

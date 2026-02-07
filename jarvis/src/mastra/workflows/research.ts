@@ -1,25 +1,19 @@
 /**
  * Research Workflow
  *
- * A multi-step deep research workflow that:
- *   1. Breaks down a research query into sub-questions
- *   2. Searches for information on each sub-question
- *   3. Synthesizes findings into a comprehensive report
- *
- * Uses Mastra's suspend/resume for human-in-the-loop approval
- * when the research scope is large.
+ * Sequential pipeline: decompose query → search sub-questions → synthesize report.
+ * Uses Mastra's graph-based workflow engine.
  */
 
 import { createWorkflow, createStep } from "@mastra/core/workflows";
 import { z } from "zod";
 
-// Shared schemas
+// Schemas
 const queryInputSchema = z.object({
   query: z.string().describe("The research topic or question"),
   depth: z
     .enum(["quick", "standard", "deep"])
-    .default("standard")
-    .describe("How deep to research"),
+    .describe("Research depth: quick (3 questions), standard (5), deep (8)"),
 });
 
 const decomposedSchema = z.object({
@@ -45,9 +39,7 @@ const reportSchema = z.object({
   avgConfidence: z.string(),
 });
 
-// ---------------------------------------------------------------------------
-// Step 1: Decompose the research query
-// ---------------------------------------------------------------------------
+// Step 1: Decompose
 const decomposeQueryStep = createStep({
   id: "decompose-query",
   description: "Break down the research query into specific sub-questions",
@@ -57,7 +49,6 @@ const decomposeQueryStep = createStep({
     const { query, depth } = inputData;
     const questionCount = depth === "quick" ? 3 : depth === "standard" ? 5 : 8;
 
-    // In production, use the LLM to decompose the query intelligently.
     const subQuestions = Array.from({ length: questionCount }, (_, i) =>
       `Sub-question ${i + 1} for: "${query}"`
     );
@@ -70,9 +61,7 @@ const decomposeQueryStep = createStep({
   },
 });
 
-// ---------------------------------------------------------------------------
-// Step 2: Research each sub-question
-// ---------------------------------------------------------------------------
+// Step 2: Research
 const researchSubQuestionsStep = createStep({
   id: "research-sub-questions",
   description: "Search and gather information for each sub-question",
@@ -81,11 +70,9 @@ const researchSubQuestionsStep = createStep({
   execute: async ({ inputData }) => {
     const { subQuestions } = inputData;
 
-    // In production, each sub-question would trigger web searches,
-    // document analysis, and LLM synthesis.
     const findings = subQuestions.map((question: string) => ({
       question,
-      answer: `Research findings pending. Connect search tools in research.ts for: "${question}"`,
+      answer: `Research findings pending. Connect search tools for: "${question}"`,
       sources: [] as string[],
       confidence: "low" as const,
     }));
@@ -94,9 +81,7 @@ const researchSubQuestionsStep = createStep({
   },
 });
 
-// ---------------------------------------------------------------------------
-// Step 3: Synthesize into report
-// ---------------------------------------------------------------------------
+// Step 3: Synthesize
 const synthesizeReportStep = createStep({
   id: "synthesize-report",
   description: "Compile research findings into a comprehensive report",
@@ -106,8 +91,7 @@ const synthesizeReportStep = createStep({
     const { findings } = inputData;
 
     const sections = findings.map(
-      (f: { question: string; answer: string; confidence: string }) =>
-        `### ${f.question}\n\n${f.answer}\n\n*Confidence: ${f.confidence}*`
+      (f) => `### ${f.question}\n\n${f.answer}\n\n*Confidence: ${f.confidence}*`
     );
 
     const report = [
@@ -131,13 +115,10 @@ const synthesizeReportStep = createStep({
   },
 });
 
-// ---------------------------------------------------------------------------
-// Workflow: Sequential research pipeline
-// ---------------------------------------------------------------------------
+// Workflow
 export const researchWorkflow = createWorkflow({
   id: "research",
-  description:
-    "Conduct deep research on a topic by decomposing it into sub-questions, gathering information, and synthesizing a report",
+  description: "Conduct deep research: decompose → search → synthesize",
   inputSchema: queryInputSchema,
   outputSchema: reportSchema,
 })
