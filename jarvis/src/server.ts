@@ -1,15 +1,14 @@
 /**
  * Jarvis HTTP Server
  *
- * The real form factor. One command, one URL, you're talking to Jarvis.
- *
- *   npm run serve
- *   → http://localhost:3033
+ *   npm run serve → http://localhost:3033
  *
  * Endpoints:
- *   GET  /                — Chat UI
- *   POST /api/chat        — Streaming chat (SSE) with conversation memory
- *   GET  /api/health      — Health check
+ *   GET  /                    — Chat UI
+ *   POST /api/chat            — Streaming chat (SSE) with memory
+ *   POST /api/voice/speak     — Text-to-speech (returns audio)
+ *   GET  /api/canvas/:id      — Render a stored canvas as HTML
+ *   GET  /api/health          — Health check
  */
 
 import { Hono } from "hono";
@@ -19,21 +18,24 @@ import { serve } from "@hono/node-server";
 import { mastra } from "./mastra/index.js";
 import { initJarvis } from "./mastra/agents/jarvis.js";
 import { renderCanvas } from "./canvas/renderer.js";
+import { createVoice } from "./voice/provider.js";
+import { startSlackBot } from "./integrations/slack.js";
 import { chatUI } from "./ui.js";
 
 const app = new Hono();
 
 app.use("*", cors());
 
-// ---------------------------------------------------------------------------
-// GET / — Serve the chat UI
-// ---------------------------------------------------------------------------
-app.get("/", (c) => {
-  return c.html(chatUI());
-});
+// Canvas storage — in-memory for now, keyed by canvasId
+const canvasStore = new Map<string, string>();
 
 // ---------------------------------------------------------------------------
-// GET /api/health — Health check
+// GET / — Chat UI
+// ---------------------------------------------------------------------------
+app.get("/", (c) => c.html(chatUI()));
+
+// ---------------------------------------------------------------------------
+// GET /api/health
 // ---------------------------------------------------------------------------
 app.get("/api/health", (c) => {
   const agent = mastra.getAgent("jarvis");
@@ -45,7 +47,7 @@ app.get("/api/health", (c) => {
 });
 
 // ---------------------------------------------------------------------------
-// POST /api/chat — Streaming chat with memory
+// POST /api/chat — Streaming chat with memory + canvas rendering
 // ---------------------------------------------------------------------------
 app.post("/api/chat", async (c) => {
   const body = await c.req.json();
@@ -62,9 +64,6 @@ app.post("/api/chat", async (c) => {
 
   return streamSSE(c, async (stream) => {
     try {
-      // Use Mastra's memory-aware stream with thread + resource.
-      // Memory automatically loads history, appends the new message,
-      // sends full context to the LLM, and saves the response.
       const result = await agent.stream(lastMessage.content, {
         memory: {
           thread: { id: threadId },
@@ -82,7 +81,7 @@ app.post("/api/chat", async (c) => {
         });
       }
 
-      // Collect tool results after stream completes
+      // Process tool results
       const finalResult = await result;
       const toolResults = (finalResult as any).toolResults;
       if (toolResults && Array.isArray(toolResults)) {
@@ -93,23 +92,23 @@ app.post("/api/chat", async (c) => {
             result: tr.result || null,
           };
 
-          // Canvas rendering
-          if (toolCall.name === "canvasTool" && toolCall.result?.rendered) {
+          // Render + store canvas
+          if (toolCall.name === "canvasTool" && toolCall.args?.components) {
             try {
               const canvasHtml = renderCanvas({
                 title: toolCall.args.title || "Canvas",
                 layout: toolCall.args.layout || "single",
                 components: toolCall.args.components || [],
               });
+              const canvasId = toolCall.result?.canvasId || `canvas-${Date.now()}`;
+              canvasStore.set(canvasId, canvasHtml);
+
               await stream.writeSSE({
                 event: "canvas",
-                data: JSON.stringify({
-                  canvasId: toolCall.result.canvasId,
-                  html: canvasHtml,
-                }),
+                data: JSON.stringify({ canvasId, html: canvasHtml }),
               });
             } catch {
-              // Canvas render failed, skip
+              // Canvas render failed
             }
           }
 
@@ -122,10 +121,7 @@ app.post("/api/chat", async (c) => {
 
       await stream.writeSSE({
         event: "done",
-        data: JSON.stringify({
-          text: fullText,
-          threadId,
-        }),
+        data: JSON.stringify({ text: fullText, threadId }),
       });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -138,13 +134,70 @@ app.post("/api/chat", async (c) => {
 });
 
 // ---------------------------------------------------------------------------
-// Start — async init then listen
+// GET /api/canvas/:id — Serve a rendered canvas
+// ---------------------------------------------------------------------------
+app.get("/api/canvas/:id", (c) => {
+  const id = c.req.param("id");
+  const html = canvasStore.get(id);
+  if (!html) {
+    return c.text("Canvas not found", 404);
+  }
+  return c.html(html);
+});
+
+// ---------------------------------------------------------------------------
+// POST /api/voice/speak — Text-to-speech
+// ---------------------------------------------------------------------------
+app.post("/api/voice/speak", async (c) => {
+  const body = await c.req.json();
+  const text: string = body.text || "";
+
+  if (!text) {
+    return c.json({ error: "No text provided" }, 400);
+  }
+
+  try {
+    const voice = await createVoice();
+    if (!voice) {
+      return c.json({ error: "No voice provider available. Set OPENAI_API_KEY or ELEVENLABS_API_KEY." }, 503);
+    }
+
+    const audioStream = await voice.speak(text);
+    if (!audioStream) {
+      return c.json({ error: "Voice provider returned no audio" }, 500);
+    }
+
+    // Convert Node stream to Response
+    c.header("Content-Type", "audio/mpeg");
+    c.header("Cache-Control", "no-cache");
+
+    const readable = audioStream as NodeJS.ReadableStream;
+    const chunks: Buffer[] = [];
+    for await (const chunk of readable) {
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    }
+    const audioBuffer = Buffer.concat(chunks);
+
+    return c.body(audioBuffer);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return c.json({ error: `TTS failed: ${message}` }, 500);
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Start
 // ---------------------------------------------------------------------------
 const PORT = parseInt(process.env.PORT || "3033", 10);
 
 async function start() {
-  // Initialize MCP tools, memory, etc.
   await initJarvis();
+
+  // Start Slack bot if configured
+  const slack = await startSlackBot(mastra);
+  if (slack) {
+    console.log("[Jarvis] Slack bot running");
+  }
 
   serve({ fetch: app.fetch, port: PORT }, () => {
     console.log();
@@ -152,6 +205,9 @@ async function start() {
     console.log("  │                                         │");
     console.log("  │   J.A.R.V.I.S. Online                   │");
     console.log(`  │   http://localhost:${PORT}                  │`);
+    if (slack) {
+      console.log("  │   Slack: Connected                      │");
+    }
     console.log("  │                                         │");
     console.log("  └─────────────────────────────────────────┘");
     console.log();
@@ -159,6 +215,6 @@ async function start() {
 }
 
 start().catch((err) => {
-  console.error("[Jarvis] Fatal startup error:", err);
+  console.error("[Jarvis] Fatal:", err);
   process.exit(1);
 });

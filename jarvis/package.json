@@ -24,6 +24,8 @@
     "@mastra/voice-deepgram": "^0.12.0",
     "@mastra/voice-elevenlabs": "^0.12.0",
     "@mastra/voice-openai": "^0.12.0",
+    "@slack/bolt": "^4.6.0",
+    "@slack/web-api": "^7.13.0",
     "@tavily/core": "^0.7.1",
     "ai": "^4.3.19",
     "hono": "^4.11.8",

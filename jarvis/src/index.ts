@@ -31,7 +31,7 @@ export { createVoice, describeVoiceCapabilities } from "./voice/provider.js";
 // Integrations
 export { channelRegistry } from "./integrations/channels.js";
 export { checkSecurity, allowSender, revokeSender } from "./integrations/security.js";
-export { SlackChannel } from "./integrations/slack.js";
+export { SlackChannel, startSlackBot } from "./integrations/slack.js";
 
 // Re-export types
 export type { InboundMessage, OutboundMessage, Channel } from "./integrations/channels.js";
