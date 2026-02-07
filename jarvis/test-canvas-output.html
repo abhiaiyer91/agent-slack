@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Stark Industries Dashboard — Jarvis Canvas</title>
+  <style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0a0a; color: #e5e5e5; padding: 24px; }
+  .canvas-title { font-size: 24px; font-weight: 700; margin-bottom: 20px; color: #fff; letter-spacing: -0.02em; }
+  .canvas-grid { display: grid; gap: 16px; }
+  .layout-single .canvas-grid { grid-template-columns: 1fr; }
+  .layout-grid .canvas-grid { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  .layout-dashboard .canvas-grid { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+  .component { background: #141414; border: 1px solid #262626; border-radius: 12px; padding: 16px; }
+  .component-title { font-size: 14px; font-weight: 600; color: #a1a1aa; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .markdown-body { line-height: 1.6; }
+  .markdown-body h1, .markdown-body h2, .markdown-body h3 { color: #fff; margin: 12px 0 8px; }
+  .markdown-body code { background: #1e1e2e; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+  .markdown-body ul { padding-left: 20px; }
+  .metric-card { text-align: center; padding: 24px; }
+  .metric-label { font-size: 13px; color: #71717a; text-transform: uppercase; letter-spacing: 0.05em; }
+  .metric-value { font-size: 36px; font-weight: 700; color: #fff; margin: 8px 0; }
+  .metric-change { font-size: 14px; font-weight: 500; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; padding: 8px 12px; border-bottom: 2px solid #262626; color: #a1a1aa; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+  td { padding: 8px 12px; border-bottom: 1px solid #1a1a1a; }
+  .status-items { display: flex; flex-wrap: wrap; gap: 12px; }
+  .status-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #1a1a1a; border-radius: 8px; }
+  .status-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .status-label { font-weight: 500; }
+  .status-detail { color: #71717a; font-size: 13px; }
+  pre { background: #1e1e2e; border-radius: 8px; padding: 16px; overflow-x: auto; }
+  code { font-family: 'SF Mono', 'Fira Code', Consolas, monospace; font-size: 13px; line-height: 1.5; }
+  figure { text-align: center; }
+  figure img { max-width: 100%; border-radius: 8px; }
+  figcaption { color: #71717a; font-size: 13px; margin-top: 8px; }
+</style>
+</head>
+<body class="layout-dashboard">
+  <div class="canvas-title">Stark Industries Dashboard</div>
+  <div class="canvas-grid">
+    <div class="component metric-card">
+    <div class="metric-label">Arc Reactor Output</div>
+    <div class="metric-value">3.6 GW</div>
+    <span class="metric-change" style="color:#34d399">&#9650; +12%</span>
+  </div>
+<div class="component metric-card">
+    <div class="metric-label">Suit Integrity</div>
+    <div class="metric-value">98.2%</div>
+    <span class="metric-change" style="color:#f87171">&#9660; -0.3%</span>
+  </div>
+<div class="component chart">
+    <h3 class="component-title">Energy Distribution</h3>
+    <svg viewBox="0 0 492 200" width="100%" preserveAspectRatio="xMidYMid meet">
+      <line x1="40" y1="0" x2="40" y2="180" stroke="#333" stroke-width="1"/>
+      <line x1="40" y1="180" x2="492" y2="180" stroke="#333" stroke-width="1"/>
+      
+        <rect x="40" y="10" width="100" height="170" fill="hsl(0, 70%, 55%)" rx="4"/>
+        <text x="90" y="196" text-anchor="middle" fill="#888" font-size="10">Weapons</text>
+        <text x="90" y="4" text-anchor="middle" fill="#ccc" font-size="11">45</text>
+      
+        <rect x="148" y="67" width="100" height="113" fill="hsl(90, 70%, 55%)" rx="4"/>
+        <text x="198" y="196" text-anchor="middle" fill="#888" font-size="10">Flight</text>
+        <text x="198" y="61" text-anchor="middle" fill="#ccc" font-size="11">30</text>
+      
+        <rect x="256" y="123" width="100" height="57" fill="hsl(180, 70%, 55%)" rx="4"/>
+        <text x="306" y="196" text-anchor="middle" fill="#888" font-size="10">Shields</text>
+        <text x="306" y="117" text-anchor="middle" fill="#ccc" font-size="11">15</text>
+      
+        <rect x="364" y="142" width="100" height="38" fill="hsl(270, 70%, 55%)" rx="4"/>
+        <text x="414" y="196" text-anchor="middle" fill="#888" font-size="10">Life Sup.</text>
+        <text x="414" y="136" text-anchor="middle" fill="#ccc" font-size="11">10</text>
+      
+    </svg>
+  </div>
+<div class="component status-grid"><h3 class="component-title">System Status</h3><div class="status-items"><div class="status-item">
+        <span class="status-dot" style="background:#34d399"></span>
+        <span class="status-label">Repulsors</span>
+        
+      </div><div class="status-item">
+        <span class="status-dot" style="background:#34d399"></span>
+        <span class="status-label">Unibeam</span>
+        
+      </div><div class="status-item">
+        <span class="status-dot" style="background:#fbbf24"></span>
+        <span class="status-label">Comm Link</span>
+        <span class="status-detail">Intermittent</span>
+      </div><div class="status-item">
+        <span class="status-dot" style="background:#34d399"></span>
+        <span class="status-label">FRIDAY</span>
+        
+      </div></div></div>
+<div class="component table-wrap"><h3 class="component-title">Recent Alerts</h3><table><thead><tr><th>Time</th><th>Source</th><th>Severity</th><th>Message</th></tr></thead><tbody><tr><td>14:32</td><td>Perimeter</td><td>Low</td><td>Drone delivery arrived</td></tr><tr><td>13:15</td><td>Lab 3</td><td>Medium</td><td>Temperature anomaly detected</td></tr><tr><td>09:00</td><td>FRIDAY</td><td>Info</td><td>Daily briefing ready</td></tr></tbody></table></div>
+<div class="component markdown"><h3 class="component-title">Notes</h3><div class="markdown-body"><p><h2>Priority Items</h2><br><ul><li>Review <strong>Mark LXXXVI</strong> schematics</li><br><li>Call Pepper about the <code>foundation</code> gala</li><br><li>Check Wakandan vibranium shipment</li></ul></p></div></div>
+  </div>
+</body>
+</html>
