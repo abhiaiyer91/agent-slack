@@ -2,11 +2,12 @@ import { Agent } from "@mastra/core/agent";
 import { Memory } from "@mastra/memory";
 import { LibSQLStore } from "@mastra/libsql";
 
-import { webSearchTool, fileSystemTool, systemStatusTool, browserTool } from "../tools/index.js";
+import { webSearchTool, fileSystemTool, systemStatusTool, browserTool, emailTool } from "../tools/index.js";
 import { visionTool } from "../../vision/tool.js";
 import { canvasTool } from "../../canvas/tool.js";
 import { dailyBriefingWorkflow } from "../workflows/daily-briefing.js";
 import { researchWorkflow } from "../workflows/research.js";
+import { prReviewWorkflow } from "../workflows/pr-review.js";
 import { createModelConfig } from "../models.js";
 import { getMCPTools } from "../tools/mcp.js";
 
@@ -56,7 +57,8 @@ const JARVIS_INSTRUCTIONS = `You are JARVIS (Just A Rather Very Intelligent Syst
 4. **System Monitoring** — Check system status, CPU, memory, uptime.
 5. **File Management** — Read, write, and organize files in the workspace.
 6. **Browser** — Navigate to URLs, take screenshots, extract content, interact with web pages.
-7. **Workflow Orchestration** — Run multi-step workflows like daily briefings and deep research.
+7. **Email** — Send emails, notifications, and reports.
+8. **Workflow Orchestration** — Run multi-step workflows like daily briefings, deep research, and PR reviews.
 
 ## Decision Framework
 - If the user asks to SEE something → use the canvas tool to generate a visual
@@ -83,12 +85,14 @@ export const jarvisAgent = new Agent({
     fileSystemTool,
     systemStatusTool,
     browserTool,
+    emailTool,
     visionTool,
     canvasTool,
   },
   workflows: {
     dailyBriefingWorkflow,
     researchWorkflow,
+    prReviewWorkflow,
   },
   memory,
 });

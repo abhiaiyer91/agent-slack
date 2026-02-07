@@ -10,7 +10,11 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit",
-    "test": "tsx src/test.ts"
+    "test": "tsx src/test.ts",
+    "daemon:start": "tsx src/daemon.ts start",
+    "daemon:stop": "tsx src/daemon.ts stop",
+    "daemon:status": "tsx src/daemon.ts status",
+    "daemon:logs": "tsx src/daemon.ts logs"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "latest",
@@ -29,6 +33,7 @@
     "@tavily/core": "latest",
     "ai": "latest",
     "discord.js": "latest",
+    "grammy": "^1.39.3",
     "hono": "latest",
     "mastra": "latest",
     "playwright": "latest",

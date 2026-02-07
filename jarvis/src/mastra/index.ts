@@ -8,6 +8,7 @@ import { ConsoleLogger } from "@mastra/core/logger";
 import { jarvisAgent, storage } from "./agents/jarvis.js";
 import { dailyBriefingWorkflow } from "./workflows/daily-briefing.js";
 import { researchWorkflow } from "./workflows/research.js";
+import { prReviewWorkflow } from "./workflows/pr-review.js";
 
 export const mastra = new Mastra({
   agents: {
@@ -16,6 +17,7 @@ export const mastra = new Mastra({
   workflows: {
     "daily-briefing": dailyBriefingWorkflow,
     research: researchWorkflow,
+    "pr-review": prReviewWorkflow,
   },
   storage,
   logger: new ConsoleLogger({

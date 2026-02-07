@@ -23,6 +23,7 @@ import { renderCanvas } from "./canvas/renderer.js";
 import { createVoice } from "./voice/provider.js";
 import { startSlackBot, type SlackChannel } from "./integrations/slack.js";
 import { startDiscordBot, type DiscordChannel } from "./integrations/discord.js";
+import { startTelegramBot, type TelegramChannel } from "./integrations/telegram.js";
 import { Scheduler } from "./scheduler.js";
 import { chatUI } from "./ui.js";
 
@@ -34,6 +35,7 @@ app.use("*", cors());
 const canvasStore = new Map<string, string>();
 let slackChannel: SlackChannel | null = null;
 let discordChannel: DiscordChannel | null = null;
+let telegramChannel: TelegramChannel | null = null;
 
 // ---------------------------------------------------------------------------
 // GET / — Chat UI
@@ -51,6 +53,7 @@ app.get("/api/health", (c) => {
     channels: {
       slack: slackChannel?.isConnected() || false,
       discord: discordChannel?.isConnected() || false,
+      telegram: telegramChannel?.isConnected() || false,
     },
     timestamp: new Date().toISOString(),
   });
@@ -309,6 +312,7 @@ async function start() {
   // Start channels
   slackChannel = await startSlackBot(mastra);
   discordChannel = await startDiscordBot(mastra);
+  telegramChannel = await startTelegramBot(mastra);
 
   // Start scheduler with channel delivery
   const agent = mastra.getAgent("jarvis");
@@ -346,6 +350,7 @@ async function start() {
     const channels: string[] = [];
     if (slackChannel?.isConnected()) channels.push("Slack");
     if (discordChannel?.isConnected()) channels.push("Discord");
+    if (telegramChannel?.isConnected()) channels.push("Telegram");
 
     console.log();
     console.log("  ┌─────────────────────────────────────────┐");

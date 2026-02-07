@@ -64,7 +64,7 @@ export const visionTool = createTool({
             ],
           },
         ],
-        maxTokens: 1024,
+        maxOutputTokens: 1024,
       });
 
       const text = result.text;
