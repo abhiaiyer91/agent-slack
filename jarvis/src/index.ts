@@ -2,11 +2,10 @@
  * Jarvis — The Ultimate AI Assistant
  * Built on Mastra, from the team behind Gatsby.
  *
- * Entry point. Exports the Mastra runtime and all subsystems.
- *
  * Usage:
- *   Development:  npm run dev    (mastra dev — hot reload + playground UI)
- *   Production:   npm run build && npm start
+ *   npm run serve        → http://localhost:3033 (chat UI + API)
+ *   npm run dev          → mastra dev (playground UI)
+ *   npm test             → run test harness
  */
 
 // Core

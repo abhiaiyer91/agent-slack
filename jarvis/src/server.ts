@@ -1,44 +1,145 @@
 /**
  * Jarvis HTTP Server
  *
- * Exposes Jarvis as an HTTP API. Mastra provides a built-in server that
- * handles routing, streaming, and the playground UI automatically.
+ * The real form factor. One command, one URL, you're talking to Jarvis.
  *
- * Endpoints provided by Mastra:
- *   POST /api/agents/jarvis/generate    — one-shot text generation
- *   POST /api/agents/jarvis/stream      — streaming text generation
- *   POST /api/workflows/:id/run         — run a workflow
- *   GET  /api/agents                    — list agents
- *   GET  /playground                    — Mastra playground UI
+ *   npm run serve
+ *   → http://localhost:3033
  *
- * Custom endpoints added here:
- *   POST /api/jarvis/chat               — convenience chat endpoint
- *   POST /api/jarvis/voice/speak        — text-to-speech
- *   POST /api/jarvis/voice/listen       — speech-to-text
- *   GET  /api/jarvis/canvas/:id         — render a canvas as HTML
- *   GET  /api/jarvis/health             — health check
+ * Endpoints:
+ *   GET  /                — Chat UI
+ *   POST /api/chat        — Streaming chat (SSE)
+ *   GET  /api/health      — Health check
  */
 
+import { Hono } from "hono";
+import { streamSSE } from "hono/streaming";
+import { cors } from "hono/cors";
+import { serve } from "@hono/node-server";
 import { mastra } from "./mastra/index.js";
+import { renderCanvas } from "./canvas/renderer.js";
+import { chatUI } from "./ui.js";
 
-// The Mastra instance IS the server when you run `mastra dev` or `mastra serve`.
-// It automatically:
-//   1. Starts an HTTP server on the configured port
-//   2. Registers routes for all agents, workflows, and tools
-//   3. Serves the playground UI
-//   4. Handles streaming via Server-Sent Events
-//
-// For custom routes, use Mastra's server adapter (Hono):
-//
-//   import { createMastraServer } from "@mastra/server";
-//   const app = createMastraServer({ mastra });
-//   app.get("/api/jarvis/health", (c) => c.json({ status: "ok", agent: "jarvis" }));
-//
-// For now, we export the mastra instance and rely on `mastra dev` for serving.
+const app = new Hono();
 
-export { mastra };
+app.use("*", cors());
 
-// Log available capabilities at startup
-const jarvis = mastra.getAgent("jarvis");
-console.log("[Jarvis] Server initialized");
-console.log(`[Jarvis] Agent: ${jarvis.name}`);
+// ---------------------------------------------------------------------------
+// GET / — Serve the chat UI
+// ---------------------------------------------------------------------------
+app.get("/", (c) => {
+  return c.html(chatUI());
+});
+
+// ---------------------------------------------------------------------------
+// GET /api/health — Health check
+// ---------------------------------------------------------------------------
+app.get("/api/health", (c) => {
+  const agent = mastra.getAgent("jarvis");
+  return c.json({
+    status: "ok",
+    agent: agent.name,
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// ---------------------------------------------------------------------------
+// POST /api/chat — Streaming chat
+// ---------------------------------------------------------------------------
+app.post("/api/chat", async (c) => {
+  const body = await c.req.json();
+  const messages: Array<{ role: string; content: string }> = body.messages || [];
+  const lastMessage = messages[messages.length - 1];
+
+  if (!lastMessage?.content) {
+    return c.json({ error: "No message provided" }, 400);
+  }
+
+  const agent = mastra.getAgent("jarvis");
+
+  // Stream response via SSE
+  return streamSSE(c, async (stream) => {
+    try {
+      const result = await agent.stream(lastMessage.content);
+
+      let fullText = "";
+      const toolCalls: Array<{ name: string; args: any; result: any }> = [];
+
+      for await (const chunk of result.textStream) {
+        fullText += chunk;
+        await stream.writeSSE({
+          event: "text",
+          data: JSON.stringify({ text: chunk }),
+        });
+      }
+
+      // Check for tool calls in the final result
+      const finalResult = await result;
+      if (finalResult.toolResults && Array.isArray(finalResult.toolResults)) {
+        for (const tr of finalResult.toolResults) {
+          const toolCall = {
+            name: tr.toolName || "unknown",
+            args: tr.args || {},
+            result: tr.result || null,
+          };
+          toolCalls.push(toolCall);
+
+          // If it's a canvas tool call, render the HTML
+          if (toolCall.name === "canvasTool" && toolCall.result?.rendered) {
+            try {
+              const canvasHtml = renderCanvas({
+                title: toolCall.args.title || "Canvas",
+                layout: toolCall.args.layout || "single",
+                components: toolCall.args.components || [],
+              });
+              await stream.writeSSE({
+                event: "canvas",
+                data: JSON.stringify({
+                  canvasId: toolCall.result.canvasId,
+                  html: canvasHtml,
+                }),
+              });
+            } catch {
+              // Canvas render failed, skip
+            }
+          }
+
+          await stream.writeSSE({
+            event: "tool",
+            data: JSON.stringify(toolCall),
+          });
+        }
+      }
+
+      await stream.writeSSE({
+        event: "done",
+        data: JSON.stringify({
+          text: fullText,
+          toolCalls: toolCalls.length,
+        }),
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      await stream.writeSSE({
+        event: "error",
+        data: JSON.stringify({ error: message }),
+      });
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Start
+// ---------------------------------------------------------------------------
+const PORT = parseInt(process.env.PORT || "3033", 10);
+
+serve({ fetch: app.fetch, port: PORT }, () => {
+  console.log();
+  console.log("  ┌─────────────────────────────────────────┐");
+  console.log("  │                                         │");
+  console.log("  │   J.A.R.V.I.S. Online                   │");
+  console.log(`  │   http://localhost:${PORT}                  │`);
+  console.log("  │                                         │");
+  console.log("  └─────────────────────────────────────────┘");
+  console.log();
+});
