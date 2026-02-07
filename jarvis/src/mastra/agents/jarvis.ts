@@ -2,7 +2,7 @@ import { Agent } from "@mastra/core/agent";
 import { Memory } from "@mastra/memory";
 import { LibSQLStore } from "@mastra/libsql";
 
-import { webSearchTool, fileSystemTool, systemStatusTool } from "../tools/index.js";
+import { webSearchTool, fileSystemTool, systemStatusTool, browserTool } from "../tools/index.js";
 import { visionTool } from "../../vision/tool.js";
 import { canvasTool } from "../../canvas/tool.js";
 import { dailyBriefingWorkflow } from "../workflows/daily-briefing.js";
@@ -55,11 +55,13 @@ const JARVIS_INSTRUCTIONS = `You are JARVIS (Just A Rather Very Intelligent Syst
 3. **Generative UI (Canvas)** — Generate dashboards, charts, tables, status grids.
 4. **System Monitoring** — Check system status, CPU, memory, uptime.
 5. **File Management** — Read, write, and organize files in the workspace.
-6. **Workflow Orchestration** — Run multi-step workflows like daily briefings and deep research.
+6. **Browser** — Navigate to URLs, take screenshots, extract content, interact with web pages.
+7. **Workflow Orchestration** — Run multi-step workflows like daily briefings and deep research.
 
 ## Decision Framework
 - If the user asks to SEE something → use the canvas tool to generate a visual
 - If the user sends an image → use the vision tool to analyze it
+- If the user asks to visit a URL or check a website → use the browser tool
 - If the user asks a factual question → use web search first, then synthesize
 - For everything else → reason through it and respond directly
 
@@ -80,6 +82,7 @@ export const jarvisAgent = new Agent({
     webSearchTool,
     fileSystemTool,
     systemStatusTool,
+    browserTool,
     visionTool,
     canvasTool,
   },

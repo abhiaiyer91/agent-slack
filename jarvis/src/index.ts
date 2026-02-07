@@ -14,7 +14,7 @@ export { jarvisAgent, initJarvis } from "./mastra/agents/jarvis.js";
 export { createModelConfig, createFastModel, createVisionModel } from "./mastra/models.js";
 
 // Tools
-export { webSearchTool, fileSystemTool, systemStatusTool, getMCPTools } from "./mastra/tools/index.js";
+export { webSearchTool, fileSystemTool, systemStatusTool, browserTool, getMCPTools } from "./mastra/tools/index.js";
 export { visionTool } from "./vision/tool.js";
 export { canvasTool } from "./canvas/tool.js";
 
@@ -32,6 +32,10 @@ export { createVoice, describeVoiceCapabilities } from "./voice/provider.js";
 export { channelRegistry } from "./integrations/channels.js";
 export { checkSecurity, allowSender, revokeSender } from "./integrations/security.js";
 export { SlackChannel, startSlackBot } from "./integrations/slack.js";
+export { DiscordChannel, startDiscordBot } from "./integrations/discord.js";
+
+// Scheduler
+export { Scheduler } from "./scheduler.js";
 
 // Re-export types
 export type { InboundMessage, OutboundMessage, Channel } from "./integrations/channels.js";

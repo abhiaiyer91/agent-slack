@@ -20,6 +20,8 @@ import { initJarvis } from "./mastra/agents/jarvis.js";
 import { renderCanvas } from "./canvas/renderer.js";
 import { createVoice } from "./voice/provider.js";
 import { startSlackBot } from "./integrations/slack.js";
+import { startDiscordBot } from "./integrations/discord.js";
+import { Scheduler } from "./scheduler.js";
 import { chatUI } from "./ui.js";
 
 const app = new Hono();
@@ -193,21 +195,39 @@ const PORT = parseInt(process.env.PORT || "3033", 10);
 async function start() {
   await initJarvis();
 
-  // Start Slack bot if configured
+  // Start channel bots if configured
   const slack = await startSlackBot(mastra);
-  if (slack) {
-    console.log("[Jarvis] Slack bot running");
-  }
+  const discord = await startDiscordBot(mastra);
+
+  // Start scheduler
+  const agent = mastra.getAgent("jarvis");
+  const scheduler = new Scheduler(agent);
+
+  // Example: daily briefing at 8am weekdays (enable by setting a delivery target)
+  scheduler.add({
+    id: "morning-briefing",
+    cron: "0 8 * * 1-5",
+    description: "Morning briefing at 8am weekdays",
+    enabled: false, // Enable when a delivery channel is configured
+    task: async (a) => a.generate("Give me a daily briefing for New York. Include weather and top news."),
+  });
+
+  scheduler.start();
 
   serve({ fetch: app.fetch, port: PORT }, () => {
+    const channels: string[] = [];
+    if (slack) channels.push("Slack");
+    if (discord) channels.push("Discord");
+
     console.log();
     console.log("  ┌─────────────────────────────────────────┐");
     console.log("  │                                         │");
     console.log("  │   J.A.R.V.I.S. Online                   │");
     console.log(`  │   http://localhost:${PORT}                  │`);
-    if (slack) {
-      console.log("  │   Slack: Connected                      │");
+    if (channels.length > 0) {
+      console.log(`  │   Channels: ${channels.join(", ").padEnd(27)}│`);
     }
+    console.log(`  │   Scheduler: ${scheduler.list().length} task(s)                  │`);
     console.log("  │                                         │");
     console.log("  └─────────────────────────────────────────┘");
     console.log();
