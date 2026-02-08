@@ -1,0 +1,47 @@
+{
+  "name": "jarvis",
+  "version": "0.1.0",
+  "description": "Jarvis — The ultimate AI assistant, built on Mastra",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "serve": "tsx --env-file .env src/server.ts",
+    "dev": "mastra dev",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx src/test.ts",
+    "daemon:start": "tsx src/daemon.ts start",
+    "daemon:stop": "tsx src/daemon.ts stop",
+    "daemon:status": "tsx src/daemon.ts status",
+    "daemon:logs": "tsx src/daemon.ts logs"
+  },
+  "dependencies": {
+    "@ai-sdk/anthropic": "latest",
+    "@ai-sdk/google": "latest",
+    "@ai-sdk/openai": "latest",
+    "@hono/node-server": "latest",
+    "@mastra/core": "latest",
+    "@mastra/libsql": "latest",
+    "@mastra/mcp": "latest",
+    "@mastra/memory": "latest",
+    "@mastra/voice-deepgram": "latest",
+    "@mastra/voice-elevenlabs": "latest",
+    "@mastra/voice-openai": "latest",
+    "@slack/bolt": "latest",
+    "@slack/web-api": "latest",
+    "@tavily/core": "latest",
+    "ai": "latest",
+    "discord.js": "latest",
+    "grammy": "^1.39.3",
+    "hono": "latest",
+    "mastra": "latest",
+    "playwright": "latest",
+    "zod": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.32",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
+  }
+}
